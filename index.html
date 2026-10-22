@@ -3174,12 +3174,13 @@ function fireNotif(title,body){
 }
 
 
-/* Cloud sync: Google Drive appDataFolder and Microsoft OneDrive appRoot.
-   OAuth SPA authorization code with PKCE. Requires HTTPS deployment and registered SPA redirect URI.
+/* Cloud sync: Google Drive drive.file and Microsoft OneDrive appRoot.
+   Google GIS token popup; Microsoft OAuth SPA authorization code with PKCE.
    Never embed client secrets. Student data stays private to the authorized account. */
 const CLOUD_KEY='tnb_cloud_config_v1', CLOUD_FILE='teacher-notebook-sync.json';
-let cloudConfig={provider:'google',googleClientId:'',microsoftClientId:'',tenant:'consumers',enabled:false};
+let cloudConfig={provider:'google',googleClientId:'825380653679-ghi0kk8v8a4018g8rptp7bh1vbdudj7o.apps.googleusercontent.com',microsoftClientId:'',tenant:'consumers',enabled:false};
 try{Object.assign(cloudConfig,JSON.parse(localStorage.getItem(CLOUD_KEY)||'{}'))}catch(e){}
+cloudConfig.googleClientId='825380653679-ghi0kk8v8a4018g8rptp7bh1vbdudj7o.apps.googleusercontent.com';
 let cloudToken=null,cloudTokenExpiry=0,cloudDirty=false,cloudTimer=null,cloudBusy=false,cloudLastHash='',cloudRemoteMeta=null;
 function cloudStoreConfig(){localStorage.setItem(CLOUD_KEY,JSON.stringify(cloudConfig))}
 function cloudSettingsHTML(){
@@ -3187,11 +3188,11 @@ function cloudSettingsHTML(){
  return `<div class="form-group" style="border:1px solid var(--bd,#ccd);border-radius:14px;padding:12px;margin-bottom:15px">
  <h3 style="margin:0 0 8px">☁️ ${ar?'المزامنة السحابية':'Cloud synchronization'}</h3>
  <p style="font-size:.77rem;line-height:1.6">${ar?'يتطلب النشر على HTTPS وتسجيل عنوان التطبيق لدى Google أو Microsoft. لا تضع كلمة المرور هنا.':'Requires HTTPS hosting and a registered app URL with Google or Microsoft. Never enter your account password here.'}</p>
- <label>${ar?'مزود التخزين':'Cloud provider'}</label><select id="cloudProvider" onchange="cloudConfig.provider=this.value;cloudStoreConfig();openM('settings')"><option value="google" ${p==='google'?'selected':''}>Google Drive</option><option value="microsoft" ${p==='microsoft'?'selected':''}>Microsoft OneDrive</option></select>
+ <label>${ar?'مزود التخزين':'Cloud provider'}</label><select id="cloudProvider" onchange="cloudConfig.provider=this.value;localStorage.removeItem('tnb_cloud_local_stamp');cloudDisconnect();cloudStoreConfig();openM('settings')"><option value="google" ${p==='google'?'selected':''}>Google Drive</option><option value="microsoft" ${p==='microsoft'?'selected':''}>Microsoft OneDrive</option></select>
  <label style="display:block;margin-top:9px">${p==='google'?'Google OAuth Client ID':'Microsoft Application (client) ID'}</label>
- <input id="cloudClient" dir="ltr" value="${escHTML(p==='google'?cloudConfig.googleClientId:cloudConfig.microsoftClientId)}" placeholder="${p==='google'?'xxxx.apps.googleusercontent.com':'Application client ID'}">
+ ${p==='google'?`<div style="font-size:.78rem;color:var(--mu);padding:8px 0">${ar?'تم إعداد Google Drive مسبقاً — فقط سجّل الدخول بحسابك':'Google Drive is preconfigured — just sign in'}</div>`:`<input id="cloudClient" dir="ltr" value="${escHTML(cloudConfig.microsoftClientId)}" placeholder="Microsoft Application client ID">`}
  ${p==='microsoft'?`<p style="font-size:.73rem">${ar?'الحسابات الشخصية Hotmail/Outlook: consumers':'Personal Hotmail/Outlook accounts: consumers'}</p>`:''}
- <p style="font-size:.7rem;word-break:break-all;margin-top:8px">Redirect URI: <code dir="ltr">${escHTML(location.origin+location.pathname)}</code></p>
+ ${p==='microsoft'?`<p style="font-size:.7rem;word-break:break-all;margin-top:8px">Redirect URI: <code dir="ltr">${escHTML(location.origin+location.pathname)}</code></p>`:''}
  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
  <button class="btn btn-primary btn-sm" type="button" onclick="cloudConnectFromSettings()">${ar?'🔗 اتصال بالحساب':'🔗 Connect account'}</button>
  <button class="btn btn-outline btn-sm" type="button" onclick="cloudSyncNow()">${ar?'🔄 مزامنة الآن':'🔄 Sync now'}</button>
@@ -3204,7 +3205,7 @@ function cloudStatusText(){return cloudToken&&Date.now()<cloudTokenExpiry?'🟢 
 function cloudStatus(msg){let e=document.getElementById('cloudStatus');if(e)e.textContent=msg;try{toast(msg)}catch(_){}}
 function cloudMarkDirty(){cloudDirty=true;if(!cloudConfig.enabled||!cloudToken)return;clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>cloudSyncNow(true),3500)}
 function cloudConnectFromSettings(){
- const v=document.getElementById('cloudClient')?.value.trim();if(cloudConfig.provider==='google')cloudConfig.googleClientId=v;else cloudConfig.microsoftClientId=v;
+ const v=document.getElementById('cloudClient')?.value.trim();if(cloudConfig.provider==='microsoft')cloudConfig.microsoftClientId=v||'';
  cloudStoreConfig();cloudConnect();
 }
 function cloudB64(bytes){return btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')}
@@ -3212,12 +3213,24 @@ async function cloudConnect(){
  if(location.protocol!=='https:'&&location.hostname!=='localhost'){cloudStatus('⚠️ HTTPS hosting is required for cloud login. Local HTML files cannot use this flow.');return}
  const id=cloudConfig.provider==='google'?cloudConfig.googleClientId:cloudConfig.microsoftClientId;
  if(!id){cloudStatus('⚠️ Enter the OAuth client ID first.');return}
+ if(cloudConfig.provider==='google'){
+  try{
+   if(!window.google?.accounts?.oauth2){await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://accounts.google.com/gsi/client';script.onload=resolve;script.onerror=()=>reject(Error('Could not load Google sign-in. Check your internet connection.'));document.head.appendChild(script)})}
+   const client=google.accounts.oauth2.initTokenClient({client_id:id,scope:'https://www.googleapis.com/auth/drive.file',callback:async(response)=>{
+    if(response.error||!response.access_token){cloudStatus('⚠️ '+(response.error_description||response.error||'Google sign-in cancelled'));return}
+    cloudToken=response.access_token;cloudTokenExpiry=Date.now()+(Number(response.expires_in)||3600)*1000-60000;cloudConfig.enabled=true;cloudStoreConfig();
+    cloudStatus('✓ '+(db.lang==='ar'?'تم الاتصال بجوجل. اضغط مزامنة للرفع أو استعادة لتنزيل نسخة سابقة.':'Google connected. Choose Sync to upload or Restore to download existing data.'));
+    try{const remote=await cloudGetRemote();if(remote?.data?.db)cloudStatus('☁️ '+(db.lang==='ar'?'توجد نسخة سحابية. تحقق منها قبل الرفع؛ يمكنك اختيار استعادة.':'Cloud backup found. Review before uploading; you can choose Restore.'))}catch(e){cloudStatus('⚠️ '+e.message)}
+   }});
+   client.requestAccessToken({prompt:'consent'});
+  }catch(e){cloudStatus('⚠️ '+e.message)}
+  return;
+ }
  const verifier=cloudB64(crypto.getRandomValues(new Uint8Array(32))),challenge=cloudB64(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))));
  const state=cloudB64(crypto.getRandomValues(new Uint8Array(18))),redirect=location.origin+location.pathname;
  sessionStorage.setItem('tnb_oauth_pending',JSON.stringify({verifier,state,provider:cloudConfig.provider,redirect}));
  let url;
- if(cloudConfig.provider==='google')url='https://accounts.google.com/o/oauth2/v2/auth?'+new URLSearchParams({client_id:id,redirect_uri:redirect,response_type:'code',scope:'https://www.googleapis.com/auth/drive.appdata',access_type:'online',code_challenge:challenge,code_challenge_method:'S256',state,prompt:'consent'});
- else url='https://login.microsoftonline.com/'+encodeURIComponent(cloudConfig.tenant||'consumers')+'/oauth2/v2.0/authorize?'+new URLSearchParams({client_id:id,redirect_uri:redirect,response_type:'code',scope:'Files.ReadWrite.AppFolder offline_access',code_challenge:challenge,code_challenge_method:'S256',state,response_mode:'query'});
+ url='https://login.microsoftonline.com/'+encodeURIComponent(cloudConfig.tenant||'consumers')+'/oauth2/v2.0/authorize?'+new URLSearchParams({client_id:id,redirect_uri:redirect,response_type:'code',scope:'Files.ReadWrite.AppFolder offline_access',code_challenge:challenge,code_challenge_method:'S256',state,response_mode:'query'});
  location.assign(url);
 }
 async function cloudFinishOAuth(){
@@ -3240,7 +3253,7 @@ function cloudHeaders(extra={}){if(!cloudToken||Date.now()>=cloudTokenExpiry)thr
 async function cloudRequest(url,opts={}){const r=await fetch(url,{...opts,headers:cloudHeaders(opts.headers||{})});if(!r.ok){let t=await r.text();throw Error('Cloud HTTP '+r.status+': '+t.slice(0,180))}return r}
 async function cloudGetRemote(){
  if(cloudConfig.provider==='google'){
- const list=await (await cloudRequest('https://www.googleapis.com/drive/v3/files?'+new URLSearchParams({spaces:'appDataFolder',q:"name = '"+CLOUD_FILE+"' and trashed = false",fields:'files(id,name,modifiedTime),nextPageToken'}))).json();
+ const list=await (await cloudRequest('https://www.googleapis.com/drive/v3/files?'+new URLSearchParams({q:"name = '"+CLOUD_FILE+"' and trashed = false",fields:'files(id,name,modifiedTime),nextPageToken'}))).json();
  if(!list.files?.length)return null;const file=list.files[0];const r=await cloudRequest('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(file.id)+'?alt=media');return {data:await r.json(),modified:file.modifiedTime};
  }
  try{const r=await cloudRequest('https://graph.microsoft.com/v1.0/me/drive/special/approot:/'+encodeURIComponent(CLOUD_FILE)+':/content');return {data:await r.json(),modified:r.headers.get('last-modified')}}catch(e){if(String(e.message).includes('404'))return null;throw e}
@@ -3250,11 +3263,11 @@ async function cloudPutRemote(data){
  if(cloudConfig.provider==='microsoft'){
  await cloudRequest('https://graph.microsoft.com/v1.0/me/drive/special/approot:/'+encodeURIComponent(CLOUD_FILE)+':/content',{method:'PUT',headers:{'Content-Type':'application/json'},body:payload});return;
  }
- const list=await(await cloudRequest('https://www.googleapis.com/drive/v3/files?'+new URLSearchParams({spaces:'appDataFolder',q:"name = '"+CLOUD_FILE+"' and trashed = false",fields:'files(id,name)'}))).json();
+ const list=await(await cloudRequest('https://www.googleapis.com/drive/v3/files?'+new URLSearchParams({q:"name = '"+CLOUD_FILE+"' and trashed = false",fields:'files(id,name)'}))).json();
  const file=list.files?.[0];
  if(file){await cloudRequest('https://www.googleapis.com/upload/drive/v3/files/'+encodeURIComponent(file.id)+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body:payload})}
  else{
- const boundary='tnb'+Date.now();const multipart='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify({name:CLOUD_FILE,parents:['appDataFolder']})+'\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+payload+'\r\n--'+boundary+'--';
+ const boundary='tnb'+Date.now();const multipart='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify({name:CLOUD_FILE,mimeType:'application/json'})+'\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+payload+'\r\n--'+boundary+'--';
  await cloudRequest('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+boundary},body:multipart});
  }
 }
@@ -3263,8 +3276,8 @@ async function cloudSyncNow(auto=false){
  cloudBusy=true;
  try{
  const remote=await cloudGetRemote(),localStamp=Number(localStorage.getItem('tnb_cloud_local_stamp')||'0'),remoteStamp=Number(remote?.data?.updatedAt||0);
- if(remote&&remoteStamp>localStamp&&localStamp>0){cloudStatus('⚠️ Newer cloud data found. Use Restore after checking your backup.');return}
- if(remote&&remoteStamp>0&&!localStamp){cloudStatus('⚠️ Cloud data exists. Restore it first or explicitly replace it after backup.');return}
+ if(remote&&remoteStamp!==localStamp&&localStamp>0){cloudStatus('⚠️ Newer cloud data found. Use Restore after checking your backup.');return}
+ if(remote&&remoteStamp>0&&!localStamp){cloudStatus('⚠️ Cloud data exists. Restore it first. Upload blocked to protect existing data.');return}
  const stamp=Date.now();await cloudPutRemote({version:1,updatedAt:stamp,db});localStorage.setItem('tnb_cloud_local_stamp',String(stamp));localStorage.setItem('tnb_cloud_last',new Date().toLocaleString());cloudDirty=false;cloudStatus('✓ '+(db.lang==='ar'?'تم رفع البيانات إلى السحابة':'Cloud backup saved'));
  }catch(e){cloudStatus('⚠️ '+e.message)}finally{cloudBusy=false}
 }
