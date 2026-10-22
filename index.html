@@ -253,6 +253,15 @@ textarea{min-height:75px;resize:vertical}
 .beh-chip:active{transform:scale(.97)}
 
 </style>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js', {scope:'./'}).catch(e => console.warn('Offline install unavailable:',e)));
+}
+</script>
 </head>
 <body data-lang="ar">
 <div id="appLock" class="app-lock" aria-hidden="false">
