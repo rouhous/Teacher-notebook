@@ -3190,7 +3190,11 @@ const CLOUD_KEY='tnb_cloud_config_v1', CLOUD_FILE='teacher-notebook-sync.json';
 let cloudConfig={provider:'google',googleClientId:'825380653679-ghi0kk8v8a4018g8rptp7bh1vbdudj7o.apps.googleusercontent.com',microsoftClientId:'',tenant:'consumers',enabled:false};
 try{Object.assign(cloudConfig,JSON.parse(localStorage.getItem(CLOUD_KEY)||'{}'))}catch(e){}
 cloudConfig.googleClientId='825380653679-ghi0kk8v8a4018g8rptp7bh1vbdudj7o.apps.googleusercontent.com';
-let cloudToken=null,cloudTokenExpiry=0,cloudDirty=false,cloudTimer=null,cloudBusy=false,cloudLastHash='',cloudRemoteMeta=null;
+let cloudToken=null,cloudTokenExpiry=0,cloudDirty=localStorage.getItem('tnb_cloud_dirty')==='1',cloudTimer=null,cloudBusy=false,cloudLastHash='',cloudRemoteMeta=null;
+const CLOUD_DIRTY_KEY='tnb_cloud_dirty';
+function cloudSetDirty(v){cloudDirty=v;localStorage.setItem(CLOUD_DIRTY_KEY,v?'1':'0')}
+function cloudConnected(){return !!cloudToken&&Date.now()<cloudTokenExpiry}
+function cloudBackupLocal(){try{localStorage.setItem('tnb_cloud_safety_'+Date.now(),JSON.stringify(db));return true}catch(e){cloudStatus('⚠️ تعذر حفظ نسخة أمان محلية؛ أوقفنا الاستعادة. صدّر نسخة JSON أولاً.');return false}}
 function cloudStoreConfig(){localStorage.setItem(CLOUD_KEY,JSON.stringify(cloudConfig))}
 function cloudSettingsHTML(){
  const ar=db.lang==='ar', p=cloudConfig.provider;
@@ -3208,11 +3212,11 @@ function cloudSettingsHTML(){
  <button class="btn btn-outline btn-sm" type="button" onclick="cloudRestore()">${ar?'⬇️ استعادة من السحابة':'⬇️ Restore from cloud'}</button>
  <button class="btn btn-outline btn-sm" type="button" onclick="cloudDisconnect()">${ar?'قطع الاتصال':'Disconnect'}</button>
  </div><p id="cloudStatus" style="font-size:.75rem;margin:9px 0 0">${cloudStatusText()}</p>
- <p style="font-size:.72rem;line-height:1.5">${ar?'تنبيه: المزامنة هنا لنسخة كاملة واحدة. إذا عدلت البيانات على جهازين دون اتصال، يجب استعادة أحدث نسخة بعناية. احتفظ بنسخة احتياطية قبل الاستعادة.':'Important: this syncs one full snapshot. Concurrent offline edits on two devices are not merged. Back up before restoring.'}</p></div>`;
+ <p style="font-size:.72rem;line-height:1.5">${ar?'المزامنة الذكية: تُرفع التعديلات عند الاتصال وتُنزل النسخ الأحدث عندما لا توجد تعديلات محلية. عند تعديل جهازين دون إنترنت تُوقف المزامنة لحماية البيانات؛ لا يتم دمج السجلات تلقائياً.':'Smart sync: uploads changes online and downloads newer versions only when local data is clean. Concurrent offline edits require manual resolution; records are not automatically merged.'}</p></div>`;
 }
 function cloudStatusText(){return cloudToken&&Date.now()<cloudTokenExpiry?'🟢 '+(db.lang==='ar'?'متصل — آخر مزامنة: ':'Connected — last sync: ')+(localStorage.getItem('tnb_cloud_last')||'—'):'⚪ '+(db.lang==='ar'?'غير متصل — البيانات محفوظة محلياً':'Disconnected — data remains local')}
 function cloudStatus(msg){let e=document.getElementById('cloudStatus');if(e)e.textContent=msg;try{toast(msg)}catch(_){}}
-function cloudMarkDirty(){cloudDirty=true;if(!cloudConfig.enabled||!cloudToken)return;clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>cloudSyncNow(true),3500)}
+function cloudMarkDirty(){cloudSetDirty(true);if(!cloudConfig.enabled||!cloudConnected())return;clearTimeout(cloudTimer);cloudTimer=setTimeout(()=>cloudSyncNow(true),5000)}
 function cloudConnectFromSettings(){
  const v=document.getElementById('cloudClient')?.value.trim();if(cloudConfig.provider==='microsoft')cloudConfig.microsoftClientId=v||'';
  cloudStoreConfig();cloudConnect();
@@ -3227,7 +3231,7 @@ async function cloudConnect(){
    if(!window.google?.accounts?.oauth2){await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://accounts.google.com/gsi/client';script.onload=resolve;script.onerror=()=>reject(Error('Could not load Google sign-in. Check your internet connection.'));document.head.appendChild(script)})}
    const client=google.accounts.oauth2.initTokenClient({client_id:id,scope:'https://www.googleapis.com/auth/drive.file',callback:async(response)=>{
     if(response.error||!response.access_token){cloudStatus('⚠️ '+(response.error_description||response.error||'Google sign-in cancelled'));return}
-    cloudToken=response.access_token;cloudTokenExpiry=Date.now()+(Number(response.expires_in)||3600)*1000-60000;cloudConfig.enabled=true;cloudStoreConfig();
+    cloudToken=response.access_token;cloudTokenExpiry=Date.now()+(Number(response.expires_in)||3600)*1000-60000;cloudConfig.enabled=true;cloudStoreConfig();setTimeout(()=>cloudSmartCheck(),1200);
     cloudStatus('✓ '+(db.lang==='ar'?'تم الاتصال بجوجل. اضغط مزامنة للرفع أو استعادة لتنزيل نسخة سابقة.':'Google connected. Choose Sync to upload or Restore to download existing data.'));
     try{const remote=await cloudGetRemote();if(remote?.data?.db)cloudStatus('☁️ '+(db.lang==='ar'?'توجد نسخة سحابية. تحقق منها قبل الرفع؛ يمكنك اختيار استعادة.':'Cloud backup found. Review before uploading; you can choose Restore.'))}catch(e){cloudStatus('⚠️ '+e.message)}
    }});
@@ -3254,7 +3258,7 @@ async function cloudFinishOAuth(){
  const body=new URLSearchParams({client_id:id,code,code_verifier:pending.verifier,redirect_uri:pending.redirect,grant_type:'authorization_code'});
  if(!google)body.set('scope','Files.ReadWrite.AppFolder offline_access');
  const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});const d=await r.json();if(!r.ok||!d.access_token)throw Error(d.error_description||d.error||'Token exchange failed');
- cloudToken=d.access_token;cloudTokenExpiry=Date.now()+(Number(d.expires_in)||3600)*1000-60000;cloudConfig.enabled=true;cloudStoreConfig();
+ cloudToken=d.access_token;cloudTokenExpiry=Date.now()+(Number(d.expires_in)||3600)*1000-60000;cloudConfig.enabled=true;cloudStoreConfig();setTimeout(()=>cloudSmartCheck(),1200);
  cloudStatus('✓ '+(db.lang==='ar'?'تم الاتصال. اختر استعادة إذا كانت لديك بيانات سابقة، أو مزامنة لرفع بيانات هذا الجهاز.':'Connected. Choose Restore for existing cloud data, or Sync to upload this device data.'));
  }catch(e){cloudStatus('⚠️ '+e.message)}
 }
@@ -3280,27 +3284,73 @@ async function cloudPutRemote(data){
  await cloudRequest('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+boundary},body:multipart});
  }
 }
+/* Conservative automatic snapshot sync. Never silently overwrite divergent edits. */
 async function cloudSyncNow(auto=false){
- if(cloudBusy)return;if(!cloudToken){if(!auto)cloudStatus('⚠️ Connect your account first.');return}
+ if(cloudBusy)return;
+ if(!cloudConnected()){if(!auto)cloudStatus('⚠️ انتهت جلسة Google. اتصل بالحساب مجدداً، وستظل البيانات محفوظة محلياً.');return}
+ if(!navigator.onLine){if(!auto)cloudStatus('📴 لا يوجد اتصال. البيانات محفوظة محلياً وستُرفع عند عودة الاتصال.');return}
  cloudBusy=true;
  try{
- const remote=await cloudGetRemote(),localStamp=Number(localStorage.getItem('tnb_cloud_local_stamp')||'0'),remoteStamp=Number(remote?.data?.updatedAt||0);
- if(remote&&remoteStamp!==localStamp&&localStamp>0){cloudStatus('⚠️ Newer cloud data found. Use Restore after checking your backup.');return}
- if(remote&&remoteStamp>0&&!localStamp){cloudStatus('⚠️ Cloud data exists. Restore it first. Upload blocked to protect existing data.');return}
- const stamp=Date.now();await cloudPutRemote({version:1,updatedAt:stamp,db});localStorage.setItem('tnb_cloud_local_stamp',String(stamp));localStorage.setItem('tnb_cloud_last',new Date().toLocaleString());cloudDirty=false;cloudStatus('✓ '+(db.lang==='ar'?'تم رفع البيانات إلى السحابة':'Cloud backup saved'));
+  const remote=await cloudGetRemote();
+  const localStamp=Number(localStorage.getItem('tnb_cloud_local_stamp')||0);
+  const remoteStamp=Number(remote?.data?.updatedAt||0);
+  if(remote&&remoteStamp!==localStamp){
+   cloudStatus('⚠️ تعارض بين النسخة السحابية وبيانات الجهاز. لم يتم استبدال أي بيانات. صدّر نسخة محلية ثم اختر الاستعادة يدوياً بعد المراجعة.');return;
+  }
+  if(!cloudDirty&&remote){if(!auto)cloudStatus('✓ البيانات محدثة ولا توجد تغييرات لرفعها');return}
+  const snapshot=JSON.stringify(db),stamp=Math.max(Date.now(),remoteStamp+1);
+  await cloudPutRemote({version:2,updatedAt:stamp,db:JSON.parse(snapshot)});
+  localStorage.setItem('tnb_cloud_local_stamp',String(stamp));
+  localStorage.setItem('tnb_cloud_last',new Date().toLocaleString());
+  // A local edit during upload must remain queued, never marked synced.
+  cloudSetDirty(JSON.stringify(db)!==snapshot);
+  cloudStatus('✓ '+(db.lang==='ar'?'تم حفظ التغييرات في السحابة':'Cloud backup saved'));
+  if(cloudDirty)setTimeout(()=>cloudSyncNow(true),1500);
  }catch(e){cloudStatus('⚠️ '+e.message)}finally{cloudBusy=false}
 }
-async function cloudRestore(){
- if(!cloudToken){cloudStatus('⚠️ Connect your account first.');return}
- if(!confirm(db.lang==='ar'?'استعادة النسخة السحابية ستستبدل بيانات هذا الجهاز. هل قمت بحفظ نسخة احتياطية؟':'Restoring replaces this device data. Have you backed up the current data?'))return;
- try{const remote=await cloudGetRemote();if(!remote?.data?.db)throw Error('No cloud backup found');
- localStorage.setItem('tnb_cloud_pre_restore_'+Date.now(),JSON.stringify(db));Object.assign(db,remote.data.db);localStorage.setItem('tnb_v4',JSON.stringify(db));localStorage.setItem('tnb_cloud_local_stamp',String(remote.data.updatedAt||Date.now()));cloudDirty=false;closeM();applyLang();renderHome();toast('✓ '+(db.lang==='ar'?'تمت استعادة البيانات':'Data restored'));
- }catch(e){cloudStatus('⚠️ '+e.message)}
+async function cloudApplyRemote(remote,automatic=false){
+ if(!remote?.data?.db)throw Error('No cloud backup found');
+ if(!cloudBackupLocal())return false;
+ const before=JSON.stringify(db);
+ // Never pull if local edits appeared during the network request.
+ if(automatic&&(cloudDirty||before!==JSON.stringify(db)))return false;
+ Object.assign(db,remote.data.db);
+ try{localStorage.setItem('tnb_v4',JSON.stringify(db))}catch(e){Object.assign(db,JSON.parse(before));throw Error('Local storage is full; remote restore cancelled')}
+ localStorage.setItem('tnb_cloud_local_stamp',String(remote.data.updatedAt||0));
+ cloudSetDirty(false);
+ try{closeM();applyLang();renderHome()}catch(e){}
+ cloudStatus('✓ '+(automatic?'تم تنزيل أحدث نسخة سحابية تلقائياً':'تمت استعادة البيانات من السحابة'));
+ return true;
 }
-function cloudDisconnect(){cloudToken=null;cloudTokenExpiry=0;cloudConfig.enabled=false;cloudStoreConfig();clearTimeout(cloudTimer);cloudStatus('Disconnected. Local data preserved.')}
-window.addEventListener('online',()=>{if(cloudDirty&&cloudToken)cloudSyncNow(true)});
-window.addEventListener('focus',()=>{if(cloudToken&&!cloudDirty)cloudCheckUpdates()});
-async function cloudCheckUpdates(){if(cloudBusy)return;try{const remote=await cloudGetRemote();if(remote?.data?.updatedAt>Number(localStorage.getItem('tnb_cloud_local_stamp')||0))cloudStatus('☁️ Newer cloud backup available — choose Restore.')}catch(e){}}
+async function cloudRestore(){
+ if(!cloudConnected()){cloudStatus('⚠️ اتصل بحساب Google أولاً');return}
+ if(!confirm(db.lang==='ar'?'الاستعادة ستستبدل بيانات هذا الجهاز. يُنصح بتصدير نسخة JSON أولاً. هل تريد المتابعة؟':'Restore replaces local data. Export a JSON backup first. Continue?'))return;
+ if(cloudBusy)return;cloudBusy=true;
+ try{const remote=await cloudGetRemote();await cloudApplyRemote(remote,false)}catch(e){cloudStatus('⚠️ '+e.message)}finally{cloudBusy=false}
+}
+function cloudDisconnect(){cloudToken=null;cloudTokenExpiry=0;cloudConfig.enabled=false;cloudStoreConfig();clearTimeout(cloudTimer);cloudStatus('تم قطع الاتصال. البيانات محفوظة محلياً.')}
+async function cloudSmartCheck(){
+ if(cloudBusy||!cloudConnected()||!navigator.onLine)return;
+ if(cloudDirty){await cloudSyncNow(true);return}
+ cloudBusy=true;
+ try{
+  const localBeforeFetch=JSON.stringify(db);
+  const remote=await cloudGetRemote();
+  if(!remote?.data?.db)return;
+  if(cloudDirty||JSON.stringify(db)!==localBeforeFetch)return;
+  const stamp=Number(localStorage.getItem('tnb_cloud_local_stamp')||0),remoteStamp=Number(remote.data.updatedAt||0);
+  if(remoteStamp===stamp)return;
+  if(!stamp){cloudStatus('☁️ توجد نسخة سحابية. اضغط استعادة بعد حفظ نسخة من بيانات الجهاز.');return}
+  // Only fast-forward a clean local copy whose last cloud revision is known.
+  const was=JSON.stringify(db);
+  if(!cloudDirty&&was===JSON.stringify(db))await cloudApplyRemote(remote,true);
+ }catch(e){if(cloudConnected())cloudStatus('⚠️ تعذر فحص السحابة: '+e.message)}finally{cloudBusy=false}
+}
+window.addEventListener('online',()=>setTimeout(cloudSmartCheck,1500));
+window.addEventListener('focus',()=>cloudSmartCheck());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)cloudSmartCheck()});
+setInterval(()=>{if(!document.hidden)cloudSmartCheck()},60000);
+async function cloudCheckUpdates(){await cloudSmartCheck()}
 setTimeout(cloudFinishOAuth,400);
 
 load();
