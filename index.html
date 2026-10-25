@@ -331,6 +331,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 <button class="btn btn-ghost btn-sm" onclick="openM('importGrades')">📄 PDF</button>
 <button class="btn btn-outline btn-sm" onclick="exportGradesReport()">🖨️</button>
 <button class="btn btn-ghost btn-sm" onclick="exportGradesCsv()">CSV</button>
+<button class="btn btn-ghost btn-sm" onclick="sendGradesToNoorExtension()">⇄ Noor</button>
 <button class="btn btn-primary btn-sm" onclick="openM('addAssess')" data-i18n="addAssess">+ تقييم</button>
 </div></div>
 <div class="form-group"><select id="gradeClass" onchange="loadGrades()"></select></div>
@@ -2953,6 +2954,28 @@ function applyGradesImport(classId){
 }
 
 
+function sendGradesToNoorExtension(){
+  const cid=document.getElementById('gradeClass')?.value;
+  const cls=db.classes.find(c=>String(c.id)===String(cid));
+  if(!cls)return toast(t('selectClassFirst'));
+  const students=db.students.filter(st=>String(st.classId)===String(cid));
+  const assessments=db.assessments.filter(a=>String(a.classId)===String(cid));
+  if(!students.length||!assessments.length)return toast(t('grades'));
+  const payload={
+    schema:'teacher-notebook-noor-v1',exportedAt:new Date().toISOString(),
+    className:cls.name||'',classId:String(cid),
+    assessments:assessments.map(a=>({id:String(a.id),name:a.name||'',max:Number(a.max)||0})),
+    students:students.map(st=>({
+      name:st.name||'',studentNumber:String(st.studentNumber||''),
+      grades:Object.fromEntries(assessments.map(a=>{
+        const v=db.grades[a.id+'_'+st.id];
+        return [String(a.id),v===undefined||v===null?'':String(v)];
+      }))
+    }))
+  };
+  window.postMessage({type:'TEACHER_NOTEBOOK_NOOR_EXPORT',payload},location.origin);
+  toast('تم إرسال الدرجات إلى إضافة Firefox إذا كانت مثبتة. افتح نور ثم الإضافة.');
+}
 function exportGradesCsv(){
   const cid=document.getElementById('gradeClass')?.value;
   if(!cid)return toast(t('classLabel'));
