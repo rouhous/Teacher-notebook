@@ -322,6 +322,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 <div class="export-bar">
   <button class="btn btn-outline btn-sm" style="flex:1" onclick="exportAttReport()">📄 PDF / طباعة</button>
   <button class="btn btn-ghost btn-sm" style="flex:1" onclick="exportAttCsv()">CSV</button>
+  <button class="btn btn-ghost btn-sm" style="flex:1" onclick="sendAttendanceToNoorExtension()">⇄ Noor</button>
 </div>
 </div>
 <div id="sc-live" class="screen"><div id="liveBody"></div></div>
@@ -1003,6 +1004,19 @@ function exportAttReport(){
   <table><thead><tr><th>#</th><th>${t('studentName')}</th><th>${t('studentNumber')}</th><th>${t('attendance')}</th></tr></thead><tbody>${rows}</tbody></table>
   <script>setTimeout(()=>window.print(),400)<\/script></body></html>`);
   w.document.close();
+}
+function sendAttendanceToNoorExtension(){
+  const cid=document.getElementById('attClass')?.value;
+  const pid=document.getElementById('attPeriod')?.value;
+  const ds=attDateStr();
+  if(!cid||!pid)return toast(t('selectClassFirst'));
+  const cls=db.classes.find(c=>String(c.id)===String(cid));
+  const students=db.students.filter(st=>String(st.classId)===String(cid));
+  const rec=db.attendance[cid+'_'+ds+'_'+pid]||{};
+  const per=db.periods.find(p=>String(p.id)===String(pid));
+  const payload={schema:'teacher-notebook-noor-attendance-v1',exportedAt:new Date().toISOString(),className:cls?.name||'',date:ds,periodId:String(pid),periodName:per?periodName(per):String(pid),students:students.map(st=>({name:st.name||'',status:rec[st.id]||''}))};
+  window.postMessage({type:'TEACHER_NOTEBOOK_NOOR_ATTENDANCE_EXPORT',payload},location.origin);
+  toast('تم إرسال سجل الحضور المحفوظ إلى إضافة Firefox للمراجعة.');
 }
 function exportAttCsv(){
   const cid=document.getElementById('attClass')?.value;
