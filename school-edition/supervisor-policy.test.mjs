@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {evaluateSupervisorAction as check} from './supervisor-policy.mjs';
+const founderSub='google-founder-sub',other='google-second-sub';
+const base={founderSub,actorSub:founderSub,supervisors:[{sub:founderSub,role:'supervisor',status:'active'},{sub:other,role:'supervisor',status:'pending'}]};
+assert.equal(check({...base,action:'activate',targetSub:other}).operation,'activate_supervisor');
+assert.equal(check({...base,action:'invite',targetSub:'new-sub'}).operation,'invite_supervisor');
+assert.throws(()=>check({...base,action:'deactivate',targetSub:founderSub}),/FOUNDER_PROTECTED/);
+assert.throws(()=>check({...base,action:'deactivate',targetSub:other}),/INVALID_ACTIVE_SUPERVISOR/);
+assert.equal(check({...base,supervisors:[...base.supervisors.slice(0,1),{sub:other,role:'supervisor',status:'active'}],action:'deactivate',targetSub:other}).operation,'deactivate_supervisor');
+assert.throws(()=>check({...base,supervisors:[],actorSub:'attacker',action:'bootstrap'}),/FOUNDER_ONLY_RECOVERY/);
+assert.equal(check({...base,supervisors:[],action:'bootstrap'}).operation,'activate_founder');
+assert.throws(()=>check({...base,action:'bootstrap'}),/ACTIVE_SUPERVISOR_EXISTS/);
+assert.throws(()=>check({...base,actorSub:other,action:'invite',targetSub:'new-sub'}),/ACTIVE_SUPERVISOR_REQUIRED/);
+console.log('Supervisor policy tests passed');
