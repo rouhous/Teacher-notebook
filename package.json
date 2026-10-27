@@ -1,0 +1,1 @@
+{"name":"teacher-notebook-school-edition-preview","private":true,"type":"module","scripts":{"test":"node --test school-edition/*.test.mjs"},"engines":{"node":">=20"}}
