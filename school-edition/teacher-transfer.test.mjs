@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {previewTeacherTransfer} from './teacher-transfer.mjs';
+const teachers=[{id:'A',schoolId:'boys',status:'active'},{id:'B',schoolId:'boys',status:'active'},{id:'C',schoolId:'girls',status:'active'}];
+const lesson={schoolId:'boys',teacherId:'A',day:0,period:1,kind:'lesson',classId:'9-1',subject:'English'};
+const reserve={schoolId:'boys',teacherId:'A',day:0,period:2,kind:'reserve',priority:'A'};
+const other={schoolId:'girls',teacherId:'C',day:0,period:1,kind:'lesson',classId:'9-1',subject:'Arabic'};
+const ok=previewTeacherTransfer({teachers,slots:[lesson,reserve,other],sourceTeacherId:'A',targetTeacherId:'B',schoolId:'boys'});
+assert.equal(ok.ok,true);assert.equal(ok.transferred.length,2);
+assert.equal(ok.nextSlots.filter(s=>s.teacherId==='A').length,0);
+assert.equal(ok.nextSlots.find(s=>s.kind==='reserve').priority,'A');
+assert.ok(ok.nextSlots.includes(other));
+assert.equal(ok.teacherChange.accountAccess,'revoke');
+const conflict=previewTeacherTransfer({teachers,slots:[lesson,reserve,{...lesson,teacherId:'B'}],sourceTeacherId:'A',targetTeacherId:'B',schoolId:'boys'});
+assert.equal(conflict.ok,false);assert.equal(conflict.conflicts.length,1);assert.equal(conflict.nextSlots,null);
+assert.throws(()=>previewTeacherTransfer({teachers,slots:[lesson],sourceTeacherId:'A',targetTeacherId:'C',schoolId:'boys'}));
+assert.throws(()=>previewTeacherTransfer({teachers,slots:[lesson],sourceTeacherId:'A',targetTeacherId:'A',schoolId:'boys'}));
+console.log('Teacher transfer tests passed');
