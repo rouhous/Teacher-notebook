@@ -1802,23 +1802,19 @@ function shuffleSeats(cid){
 }
 let lotteryRolling=false;
 let lotteryAudioContext=null;
-function diceSound(){
+function ballTick(final){
   try{
-    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
-    if(!AudioContextClass)return;
-    if(!lotteryAudioContext)lotteryAudioContext=new AudioContextClass();
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    if(!lotteryAudioContext)lotteryAudioContext=new AC();
     const ctx=lotteryAudioContext;
-    if(ctx.state==='suspended')ctx.resume();
-    const now=ctx.currentTime;
-    for(let i=0;i<16;i++){
-      const at=now+i*.16,osc=ctx.createOscillator(),gain=ctx.createGain();
-      osc.type='triangle';osc.frequency.setValueAtTime(130+Math.random()*220,at);
-      osc.frequency.exponentialRampToValueAtTime(65+Math.random()*70,at+.075);
-      gain.gain.setValueAtTime(.0001,at);gain.gain.exponentialRampToValueAtTime(.075,at+.008);
-      gain.gain.exponentialRampToValueAtTime(.0001,at+.09);
-      osc.connect(gain);gain.connect(ctx.destination);osc.start(at);osc.stop(at+.1);
-    }
-  }catch(e){console.warn('Dice sound unavailable',e)}
+    ctx.resume();
+    const t=ctx.currentTime,osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.type='sine';osc.frequency.setValueAtTime(final?540:230,t);
+    osc.frequency.exponentialRampToValueAtTime(final?850:130,t+.09);
+    gain.gain.setValueAtTime(.045,t);gain.gain.exponentialRampToValueAtTime(.0001,t+.11);
+    osc.connect(gain);gain.connect(ctx.destination);osc.start(t);osc.stop(t+.12);
+  }catch(e){}
 }
 function randPick(cid){
   if(lotteryRolling)return;
@@ -1829,42 +1825,44 @@ function randPick(cid){
   if(!state||state.key!==key)state=seatPickHistory[cid]={key,used:[]};
   let restarted=false;
   if(state.used.length>=ids.length){state.used=[];restarted=true}
-  const remaining=sts.filter(s=>!state.used.includes(String(s.id)));
-  const selected=remaining[Math.floor(Math.random()*remaining.length)];
-  const result=document.getElementById('pickRes'),btn=document.getElementById('lotteryPickBtn');
+  const available=sts.filter(s=>!state.used.includes(String(s.id)));
+  const chosen=available[Math.floor(Math.random()*available.length)];
+  const winnerIndex=sts.findIndex(s=>String(s.id)===String(chosen.id));
   lotteryRolling=true;
-  if(btn)btn.disabled=true;
-  const overlay=document.createElement('div');
-  overlay.className='dice-overlay';
-  overlay.setAttribute('role','dialog');
-  overlay.setAttribute('aria-label',db.lang==='ar'?'قرعة اختيار طالب':'Student lottery');
-  const title=document.createElement('div');title.className='dice-overlay-title';
-  title.textContent=db.lang==='ar'?'🎲 من سيكون التالي؟':'🎲 Who will be next?';
-  const arena=document.createElement('div');arena.className='dice-arena';
-  const cube=document.createElement('div');cube.className='dice-cube tumbling';
-  ['⚀','⚅','⚁','⚄','⚂','⚃'].forEach(face=>{const el=document.createElement('div');el.className='dice-face';el.textContent=face;cube.appendChild(el)});
-  arena.appendChild(cube);
-  const winner=document.createElement('div');winner.className='dice-overlay-result';
-  winner.textContent=db.lang==='ar'?'النرد يدور...':'Rolling...';
-  overlay.append(title,arena,winner);
-  document.body.appendChild(overlay);
-  diceSound();
-  setTimeout(()=>{
-    state.used.push(String(selected.id));
-    const count=state.used.length;
-    const message='🎉 '+selected.name+' — '+count+'/'+sts.length+(restarted?' ↻':'');
-    winner.textContent=message;
-    if(result&&result.isConnected)result.textContent=message;
-    cube.classList.remove('tumbling');
-    cube.style.transform='scale(1.3)';
-    const close=document.createElement('button');
-    close.type='button';close.className='dice-overlay-close';
-    close.textContent=db.lang==='ar'?'متابعة':'Continue';
-    const finish=()=>{overlay.remove();if(btn)btn.disabled=false;lotteryRolling=false};
-    close.addEventListener('click',finish);
-    overlay.appendChild(close);
-    setTimeout(()=>{if(overlay.isConnected)finish()},4200);
-  },2850);
+  const button=document.getElementById('lotteryPickBtn');if(button)button.disabled=true;
+  const overlay=document.createElement('div');overlay.className='ball-overlay';overlay.setAttribute('role','dialog');
+  const title=document.createElement('h2');title.textContent=db.lang==='ar'?'🏐 من سيكون التالي؟':'🏐 Who is next?';
+  const grid=document.createElement('div');grid.className='ball-grid';
+  const tiles=sts.map(st=>{const el=document.createElement('div');el.className='ball-name';el.textContent=st.name;grid.appendChild(el);return el});
+  const result=document.createElement('div');result.className='ball-result';result.textContent=db.lang==='ar'?'الكرة تتحرك...':'Ball bouncing...';
+  const ball=document.createElement('div');ball.className='ball-orb';
+  overlay.append(title,grid,result,ball);document.body.appendChild(overlay);
+  let step=0,previous=-1;
+  const steps=18;
+  function move(){
+    if(!overlay.isConnected){lotteryRolling=false;if(button)button.disabled=false;return}
+    let idx=step===steps-1?winnerIndex:Math.floor(Math.random()*sts.length);
+    if(step!==steps-1&&sts.length>1&&idx===previous)idx=(idx+1)%sts.length;
+    if(previous>=0)tiles[previous].classList.remove('active');
+    tiles[idx].classList.add('active');
+    tiles[idx].scrollIntoView({block:'nearest',inline:'nearest'});
+    const box=tiles[idx].getBoundingClientRect();
+    ball.style.opacity='1';
+    ball.style.transform='translate3d('+(box.left+box.width/2-15)+'px,'+(box.top+box.height/2-35)+'px,0)';
+    ballTick(false);previous=idx;step++;
+    if(step<steps){setTimeout(move,110+Math.round(250*Math.pow(step/steps,2)));return}
+    state.used.push(String(chosen.id));
+    tiles[idx].classList.remove('active');tiles[idx].classList.add('winner');
+    ball.style.opacity='0';ballTick(true);
+    const message='🎉 '+chosen.name+' — '+state.used.length+'/'+sts.length+(restarted?' ↻':'');
+    result.textContent=message;
+    const inline=document.getElementById('pickRes');if(inline)inline.textContent=message;
+    const close=document.createElement('button');close.className='ball-continue';close.textContent=db.lang==='ar'?'متابعة':'Continue';
+    const finish=()=>{overlay.remove();lotteryRolling=false;if(button)button.disabled=false};
+    close.addEventListener('click',finish);overlay.appendChild(close);
+    setTimeout(()=>{if(overlay.isConnected)finish()},5500);
+  }
+  setTimeout(move,200);
 }
 async function compressImageForStorage(file){
   const bitmap=await createImageBitmap(file);const scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close?.();return canvas.toDataURL('image/jpeg',0.82)
