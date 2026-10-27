@@ -1,0 +1,278 @@
+{
+  "version": "2026-10-27-draft",
+  "status": "requires_manual_review",
+  "boys": [
+    {
+      "id": "B01",
+      "name": "عبدالله الحوسني",
+      "source_page": 1
+    },
+    {
+      "id": "B02",
+      "name": "وليد الخنبشي",
+      "source_page": 2
+    },
+    {
+      "id": "B03",
+      "name": "هلال الحوسني",
+      "source_page": 3
+    },
+    {
+      "id": "B04",
+      "name": "سالم الخوالدي",
+      "source_page": 4
+    },
+    {
+      "id": "B05",
+      "name": "مسلم المخمري",
+      "source_page": 5
+    },
+    {
+      "id": "B06",
+      "name": "سالم السديري",
+      "source_page": 6
+    },
+    {
+      "id": "B07",
+      "name": "حسام الرواتبي",
+      "source_page": 7
+    },
+    {
+      "id": "B08",
+      "name": "محمود صلاح الدين",
+      "source_page": 8
+    },
+    {
+      "id": "B09",
+      "name": "جمعة سعد",
+      "source_page": 9
+    },
+    {
+      "id": "B10",
+      "name": "حسين جمعة",
+      "source_page": 10
+    },
+    {
+      "id": "B11",
+      "name": "عبد الباسط بوبكر",
+      "source_page": 11
+    },
+    {
+      "id": "B12",
+      "name": "ياسر حسن",
+      "source_page": 12
+    },
+    {
+      "id": "B13",
+      "name": "راشد الربيعي",
+      "source_page": 13
+    },
+    {
+      "id": "B14",
+      "name": "ناصر الجهوري",
+      "source_page": 14
+    },
+    {
+      "id": "B15",
+      "name": "معاذ الربيعي",
+      "source_page": 15
+    },
+    {
+      "id": "B16",
+      "name": "أحمد البريكي",
+      "source_page": 16
+    },
+    {
+      "id": "B17",
+      "name": "عبد الرحمان المعمري",
+      "source_page": 17
+    },
+    {
+      "id": "B18",
+      "name": "سلطان القطيطي",
+      "source_page": 18
+    },
+    {
+      "id": "B19",
+      "name": "علي المعمري",
+      "source_page": 19
+    },
+    {
+      "id": "B20",
+      "name": "جابر السعيدي",
+      "source_page": 20
+    },
+    {
+      "id": "B21",
+      "name": "حسن آل سنان",
+      "source_page": 21
+    },
+    {
+      "id": "B22",
+      "name": "محمود المعمري",
+      "source_page": 22
+    },
+    {
+      "id": "B23",
+      "name": "حبيب البحراني",
+      "source_page": 23
+    }
+  ],
+  "girls": [
+    {
+      "id": "G01",
+      "name": "سميحه العميريه",
+      "source_page": 1
+    },
+    {
+      "id": "G02",
+      "name": "ساميه القطيطيه",
+      "source_page": 2
+    },
+    {
+      "id": "G03",
+      "name": "شيخه السعيديه",
+      "source_page": 3
+    },
+    {
+      "id": "G04",
+      "name": "سامية السعيدية",
+      "source_page": 4
+    },
+    {
+      "id": "G05",
+      "name": "أميمة السعيدي",
+      "source_page": 5
+    },
+    {
+      "id": "G06",
+      "name": "فاخرة السعيدية",
+      "source_page": 6
+    },
+    {
+      "id": "G07",
+      "name": "مها المعمري",
+      "source_page": 7
+    },
+    {
+      "id": "G08",
+      "name": "طيف السعيدية",
+      "source_page": 8
+    },
+    {
+      "id": "G09",
+      "name": "أصيلة القرينية",
+      "source_page": 9
+    },
+    {
+      "id": "G10",
+      "name": "ايمان القريني",
+      "source_page": 10
+    },
+    {
+      "id": "G11",
+      "name": "زهرة السنانية",
+      "source_page": 11
+    },
+    {
+      "id": "G12",
+      "name": "نادية الحوسنية",
+      "source_page": 12
+    },
+    {
+      "id": "G13",
+      "name": "بثينة الضبارية",
+      "source_page": 13
+    },
+    {
+      "id": "G14",
+      "name": "عطيه الحيديه",
+      "source_page": 14
+    },
+    {
+      "id": "G15",
+      "name": "أحلام الحومانية",
+      "source_page": 15
+    },
+    {
+      "id": "G16",
+      "name": "ايمان العجميه",
+      "source_page": 16
+    },
+    {
+      "id": "G17",
+      "name": "حنان السنانيه",
+      "source_page": 17
+    },
+    {
+      "id": "G18",
+      "name": "خلود القطيطية",
+      "source_page": 18
+    },
+    {
+      "id": "G19",
+      "name": "الاء المعولية",
+      "source_page": 19
+    },
+    {
+      "id": "G20",
+      "name": "ليلى العجمية",
+      "source_page": 20
+    },
+    {
+      "id": "G21",
+      "name": "زهور العجمية",
+      "source_page": 21
+    },
+    {
+      "id": "G22",
+      "name": "زمزم العجمية",
+      "source_page": 22
+    },
+    {
+      "id": "G23",
+      "name": "شروق السعيدية",
+      "source_page": 23
+    },
+    {
+      "id": "G24",
+      "name": "بدرية القطيطي",
+      "source_page": 24
+    },
+    {
+      "id": "G25",
+      "name": "صفاء السعيدية",
+      "source_page": 25
+    },
+    {
+      "id": "G26",
+      "name": "هيفاء",
+      "source_page": 26
+    },
+    {
+      "id": "G27",
+      "name": "وضحى الحوسنية",
+      "source_page": 27
+    },
+    {
+      "id": "G28",
+      "name": "فايزه الحوسنيه",
+      "source_page": 28
+    },
+    {
+      "id": "G29",
+      "name": "رقية السعيدية",
+      "source_page": 29
+    },
+    {
+      "id": "G30",
+      "name": "ميزون المعمرية",
+      "source_page": 30
+    },
+    {
+      "id": "G31",
+      "name": "حبيب البحراني",
+      "source_page": 31
+    }
+  ]
+}
