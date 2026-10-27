@@ -303,7 +303,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 </div>
 <div id="sc-att" class="screen">
 <div class="section-title"><span data-i18n="attendance">تسجيل الحضور</span>
-<button class="btn btn-ghost btn-sm" onclick="exportAttReport()" title="تصدير">📄</button>
+<div style="display:flex;gap:6px;align-items:center"><button class="btn btn-ghost btn-sm" onclick="exportAttCsv()" title="تصدير الحضور إلى Excel (CSV)" aria-label="تصدير الحضور إلى Excel (CSV)"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#16834a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3h11l5 5v13H4z"/><path d="M15 3v5h5"/><path d="m8 11 6 7m0-7-6 7"/></svg></button><button class="btn btn-ghost btn-sm" onclick="exportAttReport()" title="طباعة سجل الحضور" aria-label="طباعة سجل الحضور">🖨️</button></div>
 </div>
 <div class="date-nav">
   <button class="btn-icon" onclick="shiftAttDate(-1)" aria-label="prev">‹</button>
