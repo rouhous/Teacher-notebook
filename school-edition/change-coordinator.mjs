@@ -16,7 +16,7 @@ export function prepareSchoolChange({snapshot,request}={}){
   if(!p.ok)return {ok:false,reason:'TRANSFER_CONFLICT',conflicts:p.conflicts};
   slots=p.nextSlots;details={transferred:p.transferred.length,retireTeacherId:request.sourceTeacherId};
  }else throw Error('INVALID_CHANGE_TYPE');
- const audit=auditTimetable(slots,snapshot.teachers.filter(t=>t.id!==details.retireTeacherId));
+ const audit=auditTimetable(slots,snapshot.teachers);
  // A retired teacher no longer has timetable slots, and must remain in the
  // audit roster until server-side retirement is committed.
  if(!audit.ok)return {ok:false,reason:'TIMETABLE_CONFLICT',errors:audit.errors};
