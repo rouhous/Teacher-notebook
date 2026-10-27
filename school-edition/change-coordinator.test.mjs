@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {prepareSchoolChange} from './change-coordinator.mjs';
+const teachers=[{id:'A',schoolId:'boys',status:'active'},{id:'B',schoolId:'boys',status:'active'}];
+const lesson={schoolId:'boys',teacherId:'A',day:0,period:1,kind:'lesson',classId:'9/1',subject:'English'};
+const snapshot={version:3,teachers,slots:[lesson]};
+const request={type:'timetable',expectedVersion:3,scope:'slot',schoolId:'boys',teacherId:'A',incoming:[{...lesson,classId:'9/2'}]};
+const updated=prepareSchoolChange({snapshot,request});
+assert.equal(updated.ok,true);assert.equal(updated.nextVersion,4);assert.equal(updated.details.changed,1);
+assert.throws(()=>prepareSchoolChange({snapshot,request:{...request,expectedVersion:2}}),/STALE_VERSION/);
+const collision=prepareSchoolChange({snapshot,request:{...request,scope:'teacher',incoming:[lesson,{...lesson,teacherId:'B'}]}});
+assert.throws(()=>prepareSchoolChange({snapshot,request:{...request,scope:'teacher',incoming:[{...lesson,teacherId:'B'}]}}),/INVALID_INCOMING_SLOTS/);
+const transfer=prepareSchoolChange({snapshot,request:{type:'teacher-transfer',expectedVersion:3,sourceTeacherId:'A',targetTeacherId:'B',schoolId:'boys'}});
+assert.equal(transfer.ok,true);assert.equal(transfer.details.transferred,1);
+assert.equal(transfer.proposedSlots[0].teacherId,'B');
+console.log('Coordinator tests passed');
