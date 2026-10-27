@@ -2987,12 +2987,116 @@ function sendGradesToNoorExtension(){
   window.postMessage({type:'TEACHER_NOTEBOOK_NOOR_EXPORT',payload},location.origin);
   toast('تم إرسال الدرجات إلى إضافة Firefox إذا كانت مثبتة. افتح نور ثم الإضافة.');
 }
-function shareNotebookPdf(kind){
-  // Use the existing report generator to preserve Arabic text, layout and offline support.
-  // Browser print lets the teacher choose "Save as PDF" and then share the resulting PDF.
-  if(kind==='attendance')exportAttReport();
-  else if(kind==='grades')exportGradesReport();
-  toast('اختر حفظ بصيغة PDF من نافذة الطباعة، ثم شارك الملف. لا يتم إرسال أي بيانات تلقائياً.');
+async function shareNotebookPdf(kind){
+  if(kind!=='attendance'&&kind!=='grades')return;
+  const cid=document.getElementById(kind==='attendance'?'attClass':'gradeClass')?.value;
+  if(!cid)return toast(t('selectClassFirst'));
+  const cls=db.classes.find(c=>String(c.id)===String(cid));
+  const students=db.students.filter(st=>String(st.classId)===String(cid));
+  if(!students.length)return toast('لا يوجد طلاب في هذا الصف');
+  const attendance=kind==='attendance';
+  const ds=attendance?attDateStr():'';
+  const pid=attendance?document.getElementById('attPeriod')?.value:'';
+  if(attendance&&!pid)return toast(t('selectClassFirst'));
+  const rec=attendance?(db.attendance[cid+'_'+ds+'_'+pid]||{}):{};
+  const assessments=attendance?[]:db.assessments.filter(a=>String(a.classId)===String(cid));
+  if(!attendance&&!assessments.length)return toast('لا توجد تقييمات');
+  const per=attendance?db.periods.find(p=>String(p.id)===String(pid)):null;
+  const labels={present:t('present'),absent:t('absent'),late:t('late'),excused:t('excused')};
+  const headers=attendance?['#',t('studentName'),t('attendance')]:['#',t('studentName'),...assessments.map(a=>a.name+' /'+a.max)];
+  const data=students.map((st,i)=>attendance?[String(i+1),st.name,labels[rec[st.id]]||'—']:[String(i+1),st.name,...assessments.map(a=>{const v=db.grades[a.id+'_'+st.id];return v===undefined||v===null?'—':String(v)})]);
+  try{
+    const blob=await notebookTablePdf_({
+      title:(attendance?t('attendance'):t('grades'))+' — '+(cls?.name||''),
+      subtitle:attendance?ds+' — '+(periodName(per)||''):new Date().toLocaleDateString('en-GB'),
+      headers,rows:data
+    });
+    const filename=(attendance?'attendance-':'grades-')+String(cls?.name||'class').replace(/[\\/:*?"<>|]/g,'_')+'-'+(attendance?ds:new Date().toISOString().slice(0,10))+'.pdf';
+    const file=new File([blob],filename,{type:'application/pdf'});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:attendance?t('attendance'):t('grades')});
+    }else{
+      const url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      toast('تم تجهيز ملف PDF. يمكنك مشاركته من الملفات.');
+    }
+  }catch(e){
+    if(e?.name!=='AbortError')toast('تعذرت المشاركة: '+(e?.message||e));
+  }
+}
+async function notebookTablePdf_({title,subtitle,headers,rows}){
+  // Offline, font-independent PDF: Arabic is shaped by the browser canvas engine.
+  const pageW=794,pageH=1123,scale=1.5,margin=42;
+  const n=headers.length,landscape=n>5;
+  const W=landscape?pageH:pageW,H=landscape?pageW:pageH;
+  const available=W-2*margin;
+  const nameWidth=Math.min(300,Math.max(180,available*.34));
+  const numberWidth=38;
+  const otherWidth=(available-nameWidth-numberWidth)/(n-2);
+  const widths=headers.map((_,i)=>i===0?numberWidth:i===1?nameWidth:otherWidth);
+  const rowH=37,headerY=130,footer=48;
+  const pages=[];
+  function page(){
+    const canvas=document.createElement('canvas');canvas.width=Math.round(W*scale);canvas.height=Math.round(H*scale);
+    const c=canvas.getContext('2d');c.scale(scale,scale);
+    c.fillStyle='#fff';c.fillRect(0,0,W,H);
+    c.direction='rtl';c.textAlign='right';c.fillStyle='#0f766e';c.font='bold 22px Tahoma, Arial, sans-serif';
+    c.fillText(title,W-margin,55);
+    c.font='14px Tahoma, Arial, sans-serif';c.fillStyle='#475569';c.fillText(subtitle,W-margin,82);
+    c.fillStyle='#0f766e';c.fillRect(margin,headerY,available,rowH);
+    let x=margin;
+    headers.forEach((h,i)=>{drawCell(c,String(h),x,headerY,widths[i],rowH,true);x+=widths[i]});
+    pages.push({canvas,c,y:headerY+rowH});
+    return pages[pages.length-1];
+  }
+  function drawCell(c,value,x,y,w,h,heading){
+    c.strokeStyle='#cbd5e1';c.lineWidth=.7;c.strokeRect(x,y,w,h);
+    c.save();c.beginPath();c.rect(x+3,y+2,w-6,h-4);c.clip();
+    c.fillStyle=heading?'#fff':'#164e49';c.font=(heading?'bold ':'')+'12px Tahoma, Arial, sans-serif';
+    c.direction='rtl';c.textAlign='right';
+    let text=String(value),max=w-12;
+    while(text.length>1&&c.measureText(text).width>max)text=text.slice(0,-2)+'…';
+    c.fillText(text,x+w-6,y+h/2+5);c.restore();
+  }
+  let current=page();
+  for(const row of rows){
+    if(current.y+rowH>H-footer)current=page();
+    let x=margin;
+    row.forEach((value,i)=>{drawCell(current.c,value,x,current.y,widths[i],rowH,false);x+=widths[i]});
+    current.y+=rowH;
+  }
+  const jpgs=pages.map((p,i)=>{
+    p.c.fillStyle='#64748b';p.c.font='12px Arial';p.c.textAlign='center';p.c.direction='ltr';
+    p.c.fillText((i+1)+' / '+pages.length,W/2,H-23);
+    const base64=p.canvas.toDataURL('image/jpeg',.88).split(',')[1];
+    const binary=atob(base64),bytes=new Uint8Array(binary.length);
+    for(let j=0;j<binary.length;j++)bytes[j]=binary.charCodeAt(j);
+    return {bytes,width:p.canvas.width,height:p.canvas.height};
+  });
+  const enc=new TextEncoder(),chunks=[],offsets=[0];let pos=0;
+  function add(b){chunks.push(b);pos+=b.length}
+  function ascii(s){add(enc.encode(s))}
+  ascii('%PDF-1.4\n');
+  const total=2+jpgs.length*3;
+  function obj(id,body){offsets[id]=pos;ascii(id+' 0 obj\n'+body+'\nendobj\n')}
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2,'<< /Type /Pages /Kids ['+jpgs.map((_,i)=>(3+i*3)+' 0 R').join(' ')+'] /Count '+jpgs.length+' >>');
+  jpgs.forEach((j,i)=>{
+    const pageId=3+i*3,imgId=pageId+1,contentId=pageId+2;
+    obj(pageId,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /XObject << /Im'+i+' '+imgId+' 0 R >> >> /Contents '+contentId+' 0 R >>');
+    offsets[imgId]=pos;
+    ascii(imgId+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+j.width+' /Height '+j.height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+j.bytes.length+' >>\nstream\n');
+    add(j.bytes);ascii('\nendstream\nendobj\n');
+    const commands='q\n'+W+' 0 0 '+H+' 0 0 cm\n/Im'+i+' Do\nQ\n';
+    offsets[contentId]=pos;
+    ascii(contentId+' 0 obj\n<< /Length '+enc.encode(commands).length+' >>\nstream\n'+commands+'endstream\nendobj\n');
+  });
+  const start=pos;
+  ascii('xref\n0 '+(total+1)+'\n0000000000 65535 f \n');
+  for(let i=1;i<=total;i++)ascii(String(offsets[i]).padStart(10,'0')+' 00000 n \n');
+  ascii('trailer\n<< /Size '+(total+1)+' /Root 1 0 R >>\nstartxref\n'+start+'\n%%EOF');
+  return new Blob(chunks,{type:'application/pdf'});
 }
 function exportGradesCsv(){
   const cid=document.getElementById('gradeClass')?.value;
