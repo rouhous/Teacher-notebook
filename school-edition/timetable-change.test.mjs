@@ -1,0 +1,16 @@
+import {previewTimetableChange} from './timetable-change.mjs';
+import assert from 'node:assert/strict';
+const a={schoolId:'boys',teacherId:'T1',day:0,period:1,kind:'lesson',classId:'9-1',subject:'English'};
+const b={schoolId:'boys',teacherId:'T2',day:0,period:1,kind:'reserve',priority:'A'};
+const c={schoolId:'girls',teacherId:'T3',day:0,period:1,kind:'reserve',priority:'B'};
+const current=[a,b,c];
+const newSlot={...a,classId:'9-2'};
+const single=previewTimetableChange({current,incoming:[newSlot],scope:'slot',schoolId:'boys',teacherId:'T1'});
+assert.equal(single.summary.changed,1);assert.equal(single.next.length,3);assert.ok(single.next.includes(c));
+const teacher=previewTimetableChange({current,incoming:[],scope:'teacher',schoolId:'boys',teacherId:'T1'});
+assert.equal(teacher.summary.removed,1);assert.equal(teacher.next.length,2);
+const school=previewTimetableChange({current,incoming:[b],scope:'school',schoolId:'boys'});
+assert.equal(school.summary.removed,1);assert.ok(school.next.includes(c));
+assert.throws(()=>previewTimetableChange({current,incoming:[{...a,kind:'reserve',priority:'Z'}],scope:'teacher',schoolId:'boys',teacherId:'T1'}));
+assert.throws(()=>previewTimetableChange({current,incoming:[c],scope:'school',schoolId:'boys'}));
+console.log('Timetable change tests passed.');
