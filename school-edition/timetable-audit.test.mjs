@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {auditTimetable} from './timetable-audit.mjs';
+const teachers=[{id:'A',schoolId:'boys',status:'active'},{id:'B',schoolId:'boys',status:'active'},{id:'C',schoolId:'girls',status:'active'}];
+const base={schoolId:'boys',teacherId:'A',day:0,period:1,kind:'lesson',classId:'9/1',subject:'English'};
+const reserve={schoolId:'boys',teacherId:'B',day:0,period:1,kind:'reserve',priority:'A'};
+assert.equal(auditTimetable([base,reserve],teachers).ok,true);
+const doubleTeacher=auditTimetable([base,{...base,kind:'reserve',priority:'B'}],teachers);
+assert.ok(doubleTeacher.errors.some(e=>e.code==='TEACHER_DOUBLE_BOOKED'));
+const doubleClass=auditTimetable([base,{...base,teacherId:'B'}],teachers);
+assert.ok(doubleClass.errors.some(e=>e.code==='CLASS_DOUBLE_BOOKED'));
+assert.ok(auditTimetable([{...base,teacherId:'missing'}],teachers).errors.some(e=>e.code==='UNKNOWN_TEACHER'));
+assert.ok(auditTimetable([base],[{...teachers[0],status:'retired'}]).errors.some(e=>e.code==='INACTIVE_TEACHER'));
+assert.equal(auditTimetable([{...base,schoolId:'girls',teacherId:'C'}],teachers).ok,true);
+console.log('Timetable audit tests passed');
