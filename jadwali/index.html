@@ -1,0 +1,2522 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>جدولي | إدارة الدروس الخصوصية</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    min-height:100%;
+    font-family:Tahoma,Arial,sans-serif;
+    background:#f5f7fa;
+    color:#222;
+}
+
+body{
+    overflow-x:hidden;
+}
+
+.container{
+    width:100%;
+    max-width:1400px;
+    margin:auto;
+    padding:4px;
+}
+
+/* ================= HEADER ================= */
+
+.header{
+    background:#fff;
+    border-radius:9px;
+    padding:6px;
+    margin-bottom:5px;
+    box-shadow:0 1px 5px rgba(0,0,0,.10);
+}
+
+.header-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:5px;
+}
+
+.title{
+    font-size:15px;
+    font-weight:bold;
+    color:#b71c1c;
+}
+
+.add-btn{
+    border:0;
+    background:#198754;
+    color:#fff;
+    border-radius:6px;
+    padding:6px 9px;
+    font-size:10px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.income-box{
+    margin-top:5px;
+    background:#eef7ee;
+    border:1px solid #c9e6ca;
+    border-radius:6px;
+    padding:5px;
+    text-align:center;
+}
+
+.income-label{
+    font-size:9px;
+    color:#555;
+}
+
+.income-value{
+    font-size:15px;
+    font-weight:bold;
+    color:#198754;
+    margin-top:1px;
+}
+
+/* ================= WEEK ================= */
+
+.week-title{
+    background:#343a40;
+    color:#fff;
+    text-align:center;
+    font-size:11px;
+    font-weight:bold;
+    padding:5px;
+    border-radius:6px 6px 0 0;
+}
+
+.week-table{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(7,minmax(0,1fr));
+    gap:1px;
+    background:#c5c5c5;
+    border:1px solid #c5c5c5;
+    border-top:0;
+}
+
+.day-column{
+    min-width:0;
+    background:#fff;
+    display:flex;
+    flex-direction:column;
+}
+
+.day-header{
+    background:#e1e5e8;
+    text-align:center;
+    padding:3px 1px;
+    border-bottom:1px solid #bbb;
+    font-weight:bold;
+    font-size:8px;
+    line-height:1.2;
+    min-height:28px;
+}
+
+.day-date{
+    display:block;
+    font-size:6px;
+    font-weight:normal;
+    color:#666;
+    margin-top:1px;
+}
+
+.students-list{
+    display:flex;
+    flex-direction:column;
+    width:100%;
+}
+
+.student-card{
+    border-bottom:1px solid #ddd;
+    padding:3px 1px;
+    min-height:43px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    cursor:pointer;
+    overflow:hidden;
+}
+
+.student-card:last-child{
+    border-bottom:none;
+}
+
+.student-card:active{
+    background:#eef5ff;
+}
+
+.student-name{
+    width:100%;
+    font-size:8px;
+    line-height:1.2;
+    font-weight:bold;
+    color:#0756a3;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.student-grade{
+    font-size:6.5px;
+    color:#555;
+    margin-top:1px;
+    white-space:nowrap;
+}
+
+.student-time{
+    font-size:7px;
+    color:#198754;
+    font-weight:bold;
+    margin-top:1px;
+    white-space:nowrap;
+}
+
+.completed-mark{
+    color:#198754;
+    font-size:7px;
+}
+
+.empty-day{
+    min-height:43px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#aaa;
+    font-size:7px;
+}
+
+/* ================= MODALS ================= */
+
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.48);
+    z-index:1000;
+    padding:10px;
+    align-items:center;
+    justify-content:center;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    background:#fff;
+    width:100%;
+    max-width:430px;
+    max-height:94vh;
+    overflow-y:auto;
+    border-radius:11px;
+    padding:10px;
+    box-shadow:0 5px 25px rgba(0,0,0,.25);
+}
+
+.modal-title{
+    font-size:14px;
+    font-weight:bold;
+    text-align:center;
+    margin-bottom:8px;
+    color:#333;
+}
+
+.close-btn{
+    width:100%;
+    border:0;
+    background:#6c757d;
+    color:#fff;
+    border-radius:6px;
+    padding:7px;
+    font-size:10px;
+    margin-top:5px;
+    cursor:pointer;
+}
+
+/* ================= FORM ================= */
+
+.form-group{
+    margin-bottom:6px;
+}
+
+.form-group label{
+    display:block;
+    font-size:9px;
+    font-weight:bold;
+    margin-bottom:2px;
+    color:#444;
+}
+
+.form-group input,
+.form-group select{
+    width:100%;
+    padding:7px;
+    border:1px solid #ccc;
+    border-radius:5px;
+    font-family:inherit;
+    font-size:11px;
+    background:#fff;
+}
+
+.primary-btn,
+.secondary-btn,
+.warning-btn,
+.danger-btn{
+    width:100%;
+    border:0;
+    padding:8px;
+    border-radius:6px;
+    font-size:10px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:3px;
+}
+
+.primary-btn{
+    background:#198754;
+    color:#fff;
+}
+
+.secondary-btn{
+    background:#0d6efd;
+    color:#fff;
+}
+
+.warning-btn{
+    background:#ffc107;
+    color:#222;
+}
+
+.danger-btn{
+    background:#dc3545;
+    color:#fff;
+}
+
+/* ================= STUDENT INFO ================= */
+
+.student-info{
+    background:#f6f7f8;
+    border-radius:7px;
+    padding:7px;
+    margin-bottom:7px;
+}
+
+.info-row{
+    display:flex;
+    justify-content:space-between;
+    border-bottom:1px solid #ddd;
+    padding:3px 0;
+    font-size:9px;
+}
+
+.info-row:last-child{
+    border-bottom:0;
+}
+
+.info-label{
+    color:#666;
+}
+
+.info-value{
+    font-weight:bold;
+}
+
+.completed-section{
+    margin-top:8px;
+    border-top:1px solid #ddd;
+    padding-top:7px;
+}
+
+.completed-title{
+    font-size:10px;
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+.lesson-history{
+    background:#f8f9fa;
+    border:1px solid #ddd;
+    border-radius:5px;
+    padding:5px;
+    margin-bottom:4px;
+}
+
+.history-date{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    margin-bottom:4px;
+}
+
+.history-date input{
+    flex:1;
+    min-width:0;
+    padding:5px;
+    border:1px solid #ccc;
+    border-radius:4px;
+    font-family:inherit;
+    font-size:9px;
+}
+
+.history-buttons{
+    display:flex;
+    gap:3px;
+}
+
+.history-buttons button{
+    border:0;
+    border-radius:4px;
+    padding:4px 6px;
+    font-family:inherit;
+    font-size:8px;
+    cursor:pointer;
+}
+
+.save-date-btn{
+    background:#198754;
+    color:#fff;
+}
+
+.delete-date-btn{
+    background:#dc3545;
+    color:#fff;
+}
+
+.no-history{
+    text-align:center;
+    color:#999;
+    font-size:9px;
+    padding:6px;
+}
+
+/* ================= DATE INPUT AREA ================= */
+
+.lesson-date-box{
+    background:#f1f7ff;
+    border:1px solid #cfe2ff;
+    border-radius:6px;
+    padding:6px;
+    margin-bottom:5px;
+}
+
+.lesson-date-box label{
+    display:block;
+    font-size:9px;
+    font-weight:bold;
+    margin-bottom:3px;
+    color:#444;
+}
+
+.lesson-date-box input{
+    width:100%;
+    padding:7px;
+    border:1px solid #b8cbe3;
+    border-radius:5px;
+    font-family:inherit;
+    font-size:11px;
+}
+
+/* ================= SMALL PHONES ================= */
+
+@media(max-width:360px){
+
+    .container{
+        padding:2px;
+    }
+
+    .title{
+        font-size:12px;
+    }
+
+    .add-btn{
+        font-size:8px;
+        padding:5px 6px;
+    }
+
+    .income-value{
+        font-size:13px;
+    }
+
+    .week-title{
+        font-size:9px;
+        padding:4px;
+    }
+
+    .day-header{
+        font-size:7px;
+        min-height:25px;
+    }
+
+    .day-date{
+        font-size:5px;
+    }
+
+    .student-card{
+        min-height:39px;
+        padding:2px 1px;
+    }
+
+    .student-name{
+        font-size:7px;
+    }
+
+    .student-grade{
+        font-size:5.5px;
+    }
+
+    .student-time{
+        font-size:6px;
+    }
+
+    .empty-day{
+        min-height:39px;
+    }
+}
+
+/* ================= LARGER SCREENS ================= */
+
+@media(min-width:700px){
+
+    .container{
+        padding:8px;
+    }
+
+    .title{
+        font-size:18px;
+    }
+
+    .add-btn{
+        font-size:12px;
+        padding:8px 12px;
+    }
+
+    .income-value{
+        font-size:18px;
+    }
+
+    .week-title{
+        font-size:13px;
+    }
+
+    .day-header{
+        font-size:11px;
+        min-height:38px;
+    }
+
+    .day-date{
+        font-size:8px;
+    }
+
+    .student-card{
+        min-height:55px;
+    }
+
+    .student-name{
+        font-size:10px;
+    }
+
+    .student-grade{
+        font-size:8px;
+    }
+
+    .student-time{
+        font-size:9px;
+    }
+}
+
+
+/* ================= ENHANCED DASHBOARD ================= */
+:root{--brand:#16845b;--brand-dark:#116747;--ink:#263238;--muted:#6b7280;--line:#e5e7eb;--surface:#fff;--soft:#f4f8f5}
+body{background:#f3f6f8;color:var(--ink)}
+.container{max-width:1500px;padding:10px}
+.header{border:1px solid #e8edf0;border-radius:14px;padding:12px;margin-bottom:10px}
+.title{font-size:18px;color:#8e2929}
+.add-btn{font-size:12px;padding:9px 13px;border-radius:9px;background:var(--brand)}
+.income-box{padding:9px;border-radius:10px;background:#edf7f1;border-color:#cde7d7}
+.income-label{font-size:11px}.income-value{font-size:20px}
+.dashboard-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:9px}
+.stat-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 5px;text-align:center;min-width:0}
+.stat-label{font-size:10px;color:var(--muted);display:block}
+.stat-value{font-size:17px;font-weight:800;color:var(--brand-dark);display:block;margin-top:3px}
+.schedule-tools{display:flex;gap:7px;align-items:center;flex-wrap:wrap;background:#fff;padding:9px;border:1px solid var(--line);border-bottom:0;border-radius:12px 12px 0 0;margin-top:10px}
+.search-wrap{flex:1;min-width:150px}
+.search-wrap input{width:100%;border:1px solid #d8dee3;border-radius:8px;padding:9px 10px;font:inherit;font-size:12px;outline:none}
+.search-wrap input:focus{border-color:var(--brand);box-shadow:0 0 0 2px #16845b20}
+.tool-btn{border:0;border-radius:8px;padding:9px 10px;font:inherit;font-size:11px;font-weight:bold;cursor:pointer;background:#edf3f0;color:#176746}
+.tool-btn.backup{background:#eaf2ff;color:#1557a5}
+.week-title{font-size:13px;padding:9px;border-radius:0;background:#30383d}
+.week-table{border-radius:0 0 12px 12px;overflow:hidden;gap:1px}
+.day-header{font-size:10px;min-height:42px;padding:6px 2px}
+.day-date{font-size:8px}
+.student-card{min-height:58px;padding:5px 2px;transition:background .15s}
+.student-card:hover{background:#f0f8f3}
+.student-name{font-size:10px}.student-grade{font-size:8px}.student-time{font-size:9px}
+.modal-box{border-radius:15px;padding:15px}
+.modal-title{font-size:17px;margin-bottom:12px}
+.form-group{margin-bottom:10px}.form-group label{font-size:11px;margin-bottom:4px}
+.form-group input,.form-group select{font-size:14px;padding:10px;border-radius:8px}
+.primary-btn,.secondary-btn,.warning-btn,.danger-btn{font-size:13px;padding:11px;border-radius:9px;margin-top:5px}
+.close-btn{font-size:13px;padding:10px;border-radius:9px}
+.info-row{font-size:12px;padding:7px 2px}
+.completed-title{font-size:13px}.lesson-history{padding:8px;border-radius:9px}
+.history-date input{font-size:13px;padding:8px}.history-buttons button{font-size:11px;padding:7px 10px}
+@media(max-width:420px){.container{padding:5px}.dashboard-stats{gap:5px}.stat-card{padding:8px 3px}.stat-label{font-size:9px}.stat-value{font-size:15px}.schedule-tools{gap:5px;padding:7px}.tool-btn{padding:8px;font-size:10px}.day-header{font-size:8px}.day-date{font-size:7px}.student-card{min-height:50px}.student-name{font-size:8px}.student-grade{font-size:7px}.student-time{font-size:8px}}
+@media(min-width:700px){.container{padding:14px}.header{padding:16px}.dashboard-stats{gap:12px}.stat-card{padding:14px}.stat-label{font-size:12px}.stat-value{font-size:22px}.schedule-tools{padding:12px}.day-header{font-size:12px}.student-card{min-height:65px}.student-name{font-size:12px}.student-grade{font-size:10px}.student-time{font-size:11px}}
+
+
+/* ================= MODERN 3D FINISH ================= */
+:root{--brand:#14865b;--brand-dark:#086344;--ink:#24313b;--soft-shadow:0 7px 0 rgba(5,83,55,.18),0 12px 22px rgba(18,55,42,.12)}
+body{background:linear-gradient(145deg,#f2f7f4 0%,#edf2f8 55%,#f8f8f5 100%);color:var(--ink)}
+.container{max-width:1500px;padding:10px}
+.header{border:1px solid #e4eee8;border-radius:18px;padding:14px;box-shadow:0 8px 24px rgba(26,65,48,.09)}
+.title{font-size:clamp(18px,3vw,25px);color:#a52a2a}
+.add-btn,.primary-btn,.save-date-btn,.tool-btn,.secondary-btn,.danger-btn,.delete-date-btn,.close-btn{
+ border:0!important;border-radius:12px!important;font-weight:800!important;transition:transform .16s ease,box-shadow .16s ease,filter .16s ease!important;
+ box-shadow:0 5px 0 rgba(0,0,0,.16),0 9px 16px rgba(0,0,0,.10)!important;
+}
+.add-btn,.primary-btn,.save-date-btn{background:linear-gradient(180deg,#25a875,#08764e)!important;color:#fff!important}
+.secondary-btn,.tool-btn{background:linear-gradient(180deg,#64748b,#3e4c5e)!important;color:#fff!important}
+.danger-btn,.delete-date-btn{background:linear-gradient(180deg,#f05b65,#c92e42)!important;color:#fff!important}
+button:active,.add-btn:active,.primary-btn:active,.save-date-btn:active,.tool-btn:active{transform:translateY(4px)!important;box-shadow:0 1px 0 rgba(0,0,0,.16),0 3px 7px rgba(0,0,0,.10)!important}
+button:hover,.add-btn:hover,.primary-btn:hover,.save-date-btn:hover,.tool-btn:hover{filter:brightness(1.06)}
+.income-box{border-radius:14px;padding:12px;background:linear-gradient(135deg,#edf8ef,#dff3e8);box-shadow:inset 0 1px 0 #fff}
+.week-title{padding:11px;font-size:15px;border-radius:14px 14px 0 0;background:linear-gradient(180deg,#3f4850,#252d34)}
+.week-table{border-radius:0 0 14px 14px;overflow:hidden;gap:2px;background:#d9e1df}
+.student-card{border-radius:9px!important;margin:3px!important;padding:7px 4px!important;background:linear-gradient(180deg,#fff,#f5faf7)!important;box-shadow:0 2px 0 rgba(21,95,66,.10),0 3px 8px rgba(30,50,40,.07);border:1px solid #e4eee8}
+.student-name{color:#155b8b;font-weight:800}
+.student-location{font-size:clamp(9px,1.5vw,12px);color:#64716d;line-height:1.3;margin-top:2px;overflow-wrap:anywhere}
+.student-time{font-weight:800;color:#16845b}
+.modal-box{border-radius:20px!important;box-shadow:0 18px 55px rgba(0,0,0,.24)!important}
+input,select{border-radius:11px!important;border:1px solid #d4ded9!important;padding:11px!important;background:#fff}
+input:focus,select:focus{outline:2px solid #9bd8bd!important;border-color:#16845b!important}
+@media(max-width:520px){.container{padding:6px}.header{padding:10px}.student-card{padding:6px 2px!important}.student-location{font-size:9px}}
+
+</style>
+
+<meta name="theme-color" content="#137a52">
+<meta name="description" content="جدولي لإدارة الطلاب والحصص والاشتراكات والمدفوعات. تحفظ البيانات محلياً على جهاز المستخدم.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <div class="header-top">
+
+            <div class="title">
+                جدول الحصص
+            </div>
+
+            <button class="add-btn" onclick="openAddModal()">
+                ＋ إضافة الطلاب
+            </button>
+
+        </div>
+
+        <div class="income-box">
+
+            <div class="income-label">
+                مجموع المداخيل الشهرية
+            </div>
+
+            <div class="income-value" id="monthlyIncome">
+                0 ر.ع
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="dashboard-stats" aria-label="ملخص سريع">
+        <div class="stat-card"><span class="stat-label">إجمالي الطلاب</span><strong class="stat-value" id="totalStudents">0</strong></div>
+        <div class="stat-card"><span class="stat-label">حصص اليوم</span><strong class="stat-value" id="todayLessons">0</strong></div>
+        <div class="stat-card"><span class="stat-label">حصص مكتملة هذا الأسبوع</span><strong class="stat-value" id="weekCompleted">0</strong></div>
+    </div>
+
+    <div class="schedule-tools">
+        <div class="search-wrap"><input id="studentSearch" type="search" placeholder="ابحث باسم الطالب أو الصف..." oninput="setStudentSearch(this.value)" aria-label="البحث عن طالب"></div>
+        <button class="tool-btn backup" type="button" onclick="exportBackup()">⬇ نسخة احتياطية</button>
+        <button class="tool-btn" type="button" onclick="document.getElementById('backupImport').click()">⬆ استعادة</button>
+        <input id="backupImport" type="file" accept="application/json,.json" hidden onchange="importBackup(event)">
+    </div>
+
+    <!-- WEEK -->
+
+    <div class="week-title">
+        الجدول الأسبوعي
+    </div>
+
+    <div id="weeklySchedule" class="week-table"></div>
+
+</div>
+
+
+<!-- =====================================================
+     ADD STUDENT
+===================================================== -->
+
+<div id="addModal"
+     class="modal"
+     onclick="closeModalOutside(event,'addModal')">
+
+    <div class="modal-box">
+
+        <div class="modal-title">
+            إضافة طالب
+        </div>
+
+        <div class="form-group">
+            <label>اسم الطالب</label>
+            <input id="addName"
+                   type="text"
+                   autocomplete="off"
+                   placeholder="اسم الطالب">
+        </div>
+
+        <div class="form-group">
+            <label>الصف</label>
+            <input id="addGrade"
+                   type="text"
+                   autocomplete="off"
+                   placeholder="مثال: الصف التاسع">
+        </div>
+
+        <div class="form-group">
+            <label>الموقع / المنطقة</label>
+            <input id="addLocation" type="text" autocomplete="off" placeholder="مثال: حي الرفعة أو مويلح">
+        </div>
+
+        <div class="form-group">
+            <label>اليوم</label>
+
+            <select id="addDay">
+                <option value="الأحد">الأحد</option>
+                <option value="الإثنين">الإثنين</option>
+                <option value="الثلاثاء">الثلاثاء</option>
+                <option value="الأربعاء">الأربعاء</option>
+                <option value="الخميس">الخميس</option>
+                <option value="الجمعة">الجمعة</option>
+                <option value="السبت">السبت</option>
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>التوقيت</label>
+
+            <input id="addTime"
+                   type="time">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>نوع الدفع</label>
+
+            <select id="addPayType">
+                <option value="غير محدد">غير محدد</option>
+                <option value="شهري">
+                    شهري
+                </option>
+
+                <option value="فصلي">
+                    فصلي
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group" id="addTermPlanWrap" style="display:none">
+            <label>موعد سداد المبلغ الفصلي</label>
+            <select id="addTermPlan">
+                <option value="بداية الفصل">دفعة واحدة في بداية الفصل</option>
+                <option value="نهاية الفصل">دفعة واحدة في نهاية الفصل</option>
+                <option value="مقسم">مقسم على دفعات</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+
+            <label>المبلغ</label>
+
+            <input id="addAmount"
+                   type="number"
+                   min="0"
+                   step="0.001"
+                   placeholder="المبلغ">
+
+        </div>
+
+        <button class="primary-btn"
+                onclick="addStudent()">
+            حفظ الطالب
+        </button>
+
+        <button class="close-btn"
+                onclick="closeModal('addModal')">
+            إلغاء
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     STUDENT
+===================================================== -->
+
+<div id="studentModal"
+     class="modal"
+     onclick="closeModalOutside(event,'studentModal')">
+
+    <div class="modal-box">
+
+        <div class="modal-title"
+             id="studentModalTitle">
+            الطالب
+        </div>
+
+        <div id="studentSummary"
+             class="student-info">
+        </div>
+
+        <!-- تسجيل حصة بتاريخ يختاره المستخدم -->
+
+        <div class="lesson-date-box">
+
+            <label>
+                تاريخ الحصة المكتملة
+            </label>
+
+            <input id="lessonDate"
+                   type="date">
+
+        </div>
+
+        <div id="studentActions"></div>
+
+        <div class="completed-section">
+
+            <div class="completed-title">
+                سجل الحصص المكتملة
+            </div>
+
+            <div id="completedList"></div>
+
+        </div>
+
+        <button class="close-btn"
+                onclick="closeModal('studentModal')">
+            إغلاق
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     EDIT STUDENT
+===================================================== -->
+
+<div id="editModal"
+     class="modal"
+     onclick="closeModalOutside(event,'editModal')">
+
+    <div class="modal-box">
+
+        <div class="modal-title">
+            تعديل بيانات الطالب
+        </div>
+
+        <input id="editId" type="hidden">
+
+        <div class="form-group">
+
+            <label>اسم الطالب</label>
+
+            <input id="editName"
+                   type="text">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>الصف</label>
+
+            <input id="editGrade"
+                   type="text">
+
+        </div>
+
+        <div class="form-group">
+            <label>الموقع / المنطقة</label>
+            <input id="editLocation" type="text" autocomplete="off" placeholder="مثال: حي الرفعة أو مويلح">
+        </div>
+
+        <div class="form-group">
+
+            <label>اليوم</label>
+
+            <select id="editDay">
+
+                <option value="الأحد">الأحد</option>
+                <option value="الإثنين">الإثنين</option>
+                <option value="الثلاثاء">الثلاثاء</option>
+                <option value="الأربعاء">الأربعاء</option>
+                <option value="الخميس">الخميس</option>
+                <option value="الجمعة">الجمعة</option>
+                <option value="السبت">السبت</option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>التوقيت</label>
+
+            <input id="editTime"
+                   type="time">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>نوع الدفع</label>
+
+            <select id="editPayType">
+                <option value="غير محدد">غير محدد</option>
+                <option value="شهري">
+                    شهري
+                </option>
+
+                <option value="فصلي">
+                    فصلي
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group" id="editTermPlanWrap" style="display:none">
+            <label>موعد سداد المبلغ الفصلي</label>
+            <select id="editTermPlan">
+                <option value="بداية الفصل">دفعة واحدة في بداية الفصل</option>
+                <option value="نهاية الفصل">دفعة واحدة في نهاية الفصل</option>
+                <option value="مقسم">مقسم على دفعات</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+
+            <label>المبلغ</label>
+
+            <input id="editAmount"
+                   type="number"
+                   min="0"
+                   step="0.001">
+
+        </div>
+
+        <button class="primary-btn"
+                onclick="saveEdit()">
+            حفظ التعديلات
+        </button>
+
+        <button class="close-btn"
+                onclick="closeModal('editModal')">
+            إلغاء
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   CONSTANTS
+===================================================== */
+
+const DAYS = [
+    "الأحد",
+    "الإثنين",
+    "الثلاثاء",
+    "الأربعاء",
+    "الخميس",
+    "الجمعة",
+    "السبت"
+];
+
+const STORAGE_KEY = "tuitionSchedule_v4";
+
+const OLD_KEYS = [
+    "tuitionSchedule_v3",
+    "tuitionSchedule_v2",
+    "tuitionSchedule_v1"
+];
+
+const INITIAL_STUDENTS_FROM_SCREENSHOT = []; // Public build: no personal student records embedded.
+
+let students = [];
+
+let currentStudentId = null;
+let studentSearch = "";
+
+
+/* =====================================================
+   ID
+===================================================== */
+
+function uid(){
+
+    return Date.now().toString(36) +
+           Math.random()
+           .toString(36)
+           .substring(2,9);
+
+}
+
+
+/* =====================================================
+   TODAY
+===================================================== */
+
+function today(){
+
+    const d = new Date();
+
+    const y =
+        d.getFullYear();
+
+    const m =
+        String(d.getMonth()+1)
+        .padStart(2,"0");
+
+    const day =
+        String(d.getDate())
+        .padStart(2,"0");
+
+    return `${y}-${m}-${day}`;
+
+}
+
+
+/* =====================================================
+   FORMAT DATE
+===================================================== */
+
+function formatDate(date){
+
+    if(!date) return "-";
+
+    const d =
+        new Date(date + "T00:00:00");
+
+    return d.toLocaleDateString(
+        "ar-OM",
+        {
+            day:"numeric",
+            month:"numeric",
+            year:"numeric"
+        }
+    );
+
+}
+
+
+/* =====================================================
+   ESCAPE
+===================================================== */
+
+function escapeHTML(value){
+
+    if(value === null ||
+       value === undefined){
+
+        return "";
+
+    }
+
+    return String(value)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/* =====================================================
+   SAVE DATA
+===================================================== */
+
+function saveData(){
+
+    try{
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(students)
+        );
+
+        return true;
+
+    }catch(error){
+
+        console.error(
+            "خطأ في حفظ البيانات:",
+            error
+        );
+
+        alert(
+            "تعذر حفظ البيانات على الجهاز."
+        );
+
+        return false;
+
+    }
+
+}
+
+
+/* =====================================================
+   LOAD DATA
+===================================================== */
+
+function loadData(){
+
+    let raw = null;
+
+    try{
+
+        raw =
+            localStorage.getItem(
+                STORAGE_KEY
+            );
+
+
+        /* محاولة استرجاع النسخ القديمة */
+
+        if(!raw){
+
+            for(const key of OLD_KEYS){
+
+                const oldData =
+                    localStorage.getItem(key);
+
+                if(oldData){
+
+                    raw = oldData;
+
+                    break;
+
+                }
+
+            }
+
+        }
+
+
+        if(raw){
+
+            const parsed =
+                JSON.parse(raw);
+
+            if(Array.isArray(parsed)){
+
+                students = parsed;
+
+            }else if(
+                parsed &&
+                Array.isArray(parsed.students)
+            ){
+
+                students = parsed.students;
+
+            }else{
+
+                students = [];
+
+            }
+
+        }else{
+
+            // نسخة عامة: تبدأ بقائمة فارغة، وتُحفظ بيانات كل مستخدم محلياً على جهازه.
+            students = [];
+
+        }
+
+
+        /* تنظيف البيانات */
+
+        students =
+            students.map(st => {
+
+                if(!st.id){
+                    st.id = uid();
+                }
+
+                if(!Array.isArray(st.completed)){
+                    st.completed = [];
+                }
+                if(typeof st.location !== "string") st.location = "";
+                if(!Array.isArray(st.payments)){ st.payments = []; }
+                if(typeof st.location !== "string") st.location = "";
+                if(!st.termPlan && st.payType === "فصلي") st.termPlan = "بداية الفصل";
+
+                st.completed =
+                    st.completed
+                        .filter(Boolean)
+                        .map(String);
+
+
+                if(!st.nextDueLessonsCount ||
+                   typeof st.nextDueLessonsCount !== "number"){
+
+                    recalculatePayment(st);
+
+                }
+
+                return st;
+
+            });
+
+        // دمج طلاب الصورة مرة واحدة مع أي بيانات محفوظة، دون تكرار الطالب نفسه
+        for(const imported of INITIAL_STUDENTS_FROM_SCREENSHOT){
+            const existing = students.find(st =>
+                String(st.name || "").trim() === imported.name &&
+                st.day === imported.day &&
+                st.time === imported.time
+            );
+            if(existing){
+                if(!existing.location) existing.location = imported.location;
+                if(!existing.grade || existing.grade === "-") existing.grade = imported.grade;
+                existing.importedFromScreenshot = true;
+            }else{
+                students.push({...imported});
+            }
+        }
+
+        saveData();
+
+    }catch(error){
+
+        console.error(
+            "خطأ في قراءة البيانات:",
+            error
+        );
+
+        students = [];
+
+    }
+
+}
+
+
+/* =====================================================
+   ADD STUDENT
+===================================================== */
+
+function openAddModal(){
+
+    document.getElementById("addName").value = "";
+    document.getElementById("addGrade").value = "";
+    document.getElementById("addLocation").value = "";
+    document.getElementById("addTime").value = "";
+    document.getElementById("addAmount").value = "";
+
+    document.getElementById("addDay").value =
+        "الأحد";
+
+    document.getElementById("addPayType").value =
+        "شهري";
+    document.getElementById("addTermPlan").value = "بداية الفصل";
+    toggleTermPlan("add");
+
+    openModal("addModal");
+
+}
+
+
+function toggleTermPlan(prefix){
+    const type = document.getElementById(prefix + "PayType").value;
+    const wrap = document.getElementById(prefix + "TermPlanWrap");
+    if(wrap) wrap.style.display = type === "فصلي" ? "block" : "none";
+}
+
+function addStudent(){
+
+    const name =
+        document.getElementById("addName")
+        .value.trim();
+
+    const grade =
+        document.getElementById("addGrade")
+        .value.trim();
+
+    const location =
+        document.getElementById("addLocation")
+        .value.trim();
+
+    const day =
+        document.getElementById("addDay")
+        .value;
+
+    const time =
+        document.getElementById("addTime")
+        .value;
+
+    const payType =
+        document.getElementById("addPayType")
+        .value;
+
+    const amount =
+        Number(
+            document.getElementById("addAmount")
+            .value
+        );
+
+
+    if(!name){
+
+        alert("يرجى إدخال اسم الطالب.");
+
+        return;
+
+    }
+
+
+    if(!time){
+
+        alert("يرجى اختيار توقيت الحصة.");
+
+        return;
+
+    }
+
+
+    if(amount < 0 ||
+       Number.isNaN(amount)){
+
+        alert("يرجى إدخال مبلغ صحيح.");
+
+        return;
+
+    }
+
+
+    const student = {
+
+        id:uid(),
+
+        name:name,
+
+        grade:grade,
+        location:location,
+
+        day:day,
+
+        time:time,
+
+        payType:payType,
+
+        amount:amount,
+        termPlan: payType === "فصلي" ? document.getElementById("addTermPlan").value : "",
+        payments: [],
+
+        completed:[],
+
+        nextDueLessonsCount:4
+
+    };
+
+
+    students.push(student);
+
+    saveData();
+
+    closeModal("addModal");
+
+    render();
+
+}
+
+
+/* =====================================================
+   OPEN STUDENT
+===================================================== */
+
+function openStudent(id){
+
+    const st =
+        students.find(
+            s => s.id === id
+        );
+
+    if(!st) return;
+
+
+    currentStudentId = id;
+
+
+    document.getElementById(
+        "studentModalTitle"
+    ).textContent = st.name;
+
+
+    document.getElementById(
+        "lessonDate"
+    ).value = today();
+
+
+    document.getElementById(
+        "studentSummary"
+    ).innerHTML = `
+
+        <div class="info-row">
+            <span class="info-label">
+                الصف
+            </span>
+
+            <span class="info-value">
+                ${escapeHTML(st.grade || "-")}
+            </span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">الموقع</span>
+            <span class="info-value">${escapeHTML(st.location || "غير محدد")}</span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">
+                اليوم
+            </span>
+
+            <span class="info-value">
+                ${escapeHTML(st.day)}
+            </span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">
+                التوقيت
+            </span>
+
+            <span class="info-value">
+                ${escapeHTML(st.time)}
+            </span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">
+                نوع الدفع
+            </span>
+
+            <span class="info-value">
+                ${escapeHTML(st.payType)}
+            </span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">
+                المبلغ
+            </span>
+
+            <span class="info-value">
+                ${st.payType === "غير محدد" ? "لم يُحدد بعد" : Number(st.amount || 0).toLocaleString("ar-OM") + " ر.ع"}
+            </span>
+        </div>
+
+        ${st.payType === "فصلي" ? `
+        <div class="info-row"><span class="info-label">موعد السداد</span><span class="info-value">${escapeHTML(st.termPlan || "بداية الفصل")}</span></div>
+        <div class="info-row"><span class="info-label">المدفوع من الاشتراك</span><span class="info-value">${Number((st.payments||[]).reduce((a,p)=>a+Number(p.amount||0),0)).toLocaleString("ar-OM")} ر.ع</span></div>
+        <div class="info-row"><span class="info-label">المتبقي</span><span class="info-value">${Math.max(0,Number(st.amount||0)-(st.payments||[]).reduce((a,p)=>a+Number(p.amount||0),0)).toLocaleString("ar-OM")} ر.ع</span></div>
+        <div class="info-row"><span class="info-label">سجل الدفعات</span><span class="info-value">${(st.payments||[]).length ? (st.payments||[]).map(p => `${Number(p.amount||0).toLocaleString("ar-OM")} ر.ع – ${escapeHTML(p.date||"")}`).join(" | ") : "لا توجد دفعات مسجلة"}</span></div>
+        ` : ""}
+        <div class="info-row">
+            <span class="info-label">
+                الحصص حتى الدفع
+            </span>
+
+            <span class="info-value">
+                ${st.nextDueLessonsCount} حصص
+            </span>
+        </div>
+
+    `;
+
+
+    document.getElementById(
+        "studentActions"
+    ).innerHTML = `
+
+        <button class="primary-btn"
+                onclick="completeSelectedLesson()">
+            ✓ تسجيل الحصة بالتاريخ المختار
+        </button>
+
+        ${st.payType === "فصلي" ? `<button class="secondary-btn" onclick="recordTermPayment('${st.id}')">＋ تسجيل دفعة فصليّة</button>` : ""}
+
+        <button class="secondary-btn"
+                onclick="openEdit('${st.id}')">
+            ✎ تعديل بيانات الطالب
+        </button>
+
+        <button class="danger-btn"
+                onclick="deleteStudent('${st.id}')">
+            حذف الطالب
+        </button>
+
+    `;
+
+
+    renderStudentCompleted(st);
+
+    openModal("studentModal");
+
+}
+
+
+/* =====================================================
+   COMPLETE SELECTED DATE
+===================================================== */
+
+function recordTermPayment(studentId){
+    const st = students.find(s => s.id === studentId);
+    if(!st) return;
+    const raw = prompt("أدخل قيمة الدفعة المستلمة (ر.ع):");
+    if(raw === null) return;
+    const amount = Number(raw);
+    if(!Number.isFinite(amount) || amount <= 0){ alert("يرجى إدخال مبلغ صحيح أكبر من صفر."); return; }
+    const paid = (st.payments || []).reduce((sum,p)=>sum+Number(p.amount||0),0);
+    const remaining = Math.max(0, Number(st.amount||0)-paid);
+    if(amount > remaining){ alert("قيمة الدفعة أكبر من المبلغ المتبقي: " + remaining.toLocaleString("ar-OM") + " ر.ع"); return; }
+    if(!Array.isArray(st.payments)) st.payments = [];
+    st.payments.push({id:uid(), amount, date:today()});
+    saveData();
+    openStudent(studentId);
+    render();
+}
+
+function completeSelectedLesson(){
+
+    const id = currentStudentId;
+
+    const st =
+        students.find(
+            s => s.id === id
+        );
+
+    if(!st) return;
+
+
+    const date =
+        document.getElementById(
+            "lessonDate"
+        ).value;
+
+
+    if(!date){
+
+        alert("يرجى اختيار تاريخ الحصة.");
+
+        return;
+
+    }
+
+
+    if(!Array.isArray(st.completed)){
+
+        st.completed = [];
+
+    }
+
+
+    if(st.completed.includes(date)){
+
+        alert(
+            "تم تسجيل حصة لهذا الطالب في هذا التاريخ مسبقاً."
+        );
+
+        return;
+
+    }
+
+
+    st.completed.push(date);
+
+    st.completed.sort();
+
+
+    if(st.payType === "شهري"){
+
+        st.nextDueLessonsCount--;
+
+        if(st.nextDueLessonsCount <= 0){
+
+            st.nextDueLessonsCount = 4;
+
+            saveData();
+
+            render();
+
+            openStudent(id);
+
+            alert(
+                "تم إكمال 4 حصص.\nحان موعد الدفع."
+            );
+
+            return;
+
+        }
+
+    }
+
+
+    saveData();
+
+    render();
+
+    openStudent(id);
+
+}
+
+
+/* =====================================================
+   CHANGE COMPLETED DATE
+===================================================== */
+
+function changeCompletedDate(
+    studentId,
+    oldDate
+){
+
+    const st =
+        students.find(
+            s => s.id === studentId
+        );
+
+    if(!st) return;
+
+
+    const input =
+        document.getElementById(
+            "date_" + oldDate.replaceAll("-","")
+        );
+
+
+    if(!input) return;
+
+
+    const newDate =
+        input.value;
+
+
+    if(!newDate){
+
+        alert("يرجى اختيار تاريخ.");
+
+        return;
+
+    }
+
+
+    if(newDate === oldDate){
+
+        alert("لم يتم تغيير التاريخ.");
+
+        return;
+
+    }
+
+
+    if(st.completed.includes(newDate)){
+
+        alert(
+            "يوجد حصة مسجلة مسبقاً بهذا التاريخ."
+        );
+
+        return;
+
+    }
+
+
+    const index =
+        st.completed.indexOf(oldDate);
+
+
+    if(index === -1) return;
+
+
+    st.completed[index] = newDate;
+
+    st.completed.sort();
+
+
+    recalculatePayment(st);
+
+    saveData();
+
+    render();
+
+    openStudent(studentId);
+
+
+    alert("تم تعديل تاريخ الحصة وحفظه تلقائياً.");
+
+}
+
+
+/* =====================================================
+   DELETE COMPLETED DATE
+===================================================== */
+
+function deleteCompletedDate(
+    studentId,
+    date
+){
+
+    const st =
+        students.find(
+            s => s.id === studentId
+        );
+
+    if(!st) return;
+
+
+    const confirmed =
+        confirm(
+            "هل تريد حذف تسجيل هذه الحصة؟"
+        );
+
+
+    if(!confirmed) return;
+
+
+    const index =
+        st.completed.indexOf(date);
+
+
+    if(index === -1) return;
+
+
+    st.completed.splice(index,1);
+
+
+    recalculatePayment(st);
+
+    saveData();
+
+    render();
+
+    openStudent(studentId);
+
+}
+
+
+/* =====================================================
+   RECALCULATE PAYMENT
+===================================================== */
+
+function recalculatePayment(st){
+
+    if(st.payType !== "شهري"){
+
+        st.nextDueLessonsCount = 4;
+
+        return;
+
+    }
+
+
+    const count =
+        st.completed.length % 4;
+
+
+    st.nextDueLessonsCount =
+        count === 0
+            ? 4
+            : 4 - count;
+
+}
+
+
+/* =====================================================
+   RENDER COMPLETED
+===================================================== */
+
+function renderStudentCompleted(st){
+
+    const container =
+        document.getElementById(
+            "completedList"
+        );
+
+
+    if(!st.completed ||
+       st.completed.length === 0){
+
+        container.innerHTML = `
+
+            <div class="no-history">
+                لا توجد حصص مكتملة
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    const dates =
+        [...st.completed]
+            .sort()
+            .reverse();
+
+
+    container.innerHTML =
+        dates.map(date => {
+
+            const safeId =
+                date.replaceAll("-","");
+
+
+            return `
+
+                <div class="lesson-history">
+
+                    <div class="history-date">
+
+                        <input
+                            id="date_${safeId}"
+                            type="date"
+                            value="${date}"
+                        >
+
+                    </div>
+
+                    <div class="history-buttons">
+
+                        <button
+                            class="save-date-btn"
+                            onclick="
+                                changeCompletedDate(
+                                    '${st.id}',
+                                    '${date}'
+                                )
+                            ">
+                            حفظ التاريخ
+                        </button>
+
+                        <button
+                            class="delete-date-btn"
+                            onclick="
+                                deleteCompletedDate(
+                                    '${st.id}',
+                                    '${date}'
+                                )
+                            ">
+                            حذف الحصة
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        }).join("");
+
+}
+
+
+/* =====================================================
+   EDIT STUDENT
+===================================================== */
+
+function openEdit(id){
+
+    const st =
+        students.find(
+            s => s.id === id
+        );
+
+    if(!st) return;
+
+
+    document.getElementById("editId").value =
+        st.id;
+
+    document.getElementById("editName").value =
+        st.name;
+
+    document.getElementById("editGrade").value =
+        st.grade || "";
+
+    document.getElementById("editLocation").value =
+        st.location || "";
+
+    document.getElementById("editDay").value =
+        st.day;
+
+    document.getElementById("editTime").value =
+        st.time;
+
+    document.getElementById("editPayType").value =
+        st.payType;
+    document.getElementById("editTermPlan").value = st.termPlan || "بداية الفصل";
+    toggleTermPlan("edit");
+
+    document.getElementById("editAmount").value =
+        st.amount;
+
+
+    closeModal("studentModal");
+
+    openModal("editModal");
+
+}
+
+
+function saveEdit(){
+
+    const id =
+        document.getElementById("editId").value;
+
+
+    const st =
+        students.find(
+            s => s.id === id
+        );
+
+    if(!st) return;
+
+
+    const name =
+        document.getElementById("editName")
+        .value.trim();
+
+    const grade =
+        document.getElementById("editGrade")
+        .value.trim();
+
+    const location =
+        document.getElementById("editLocation")
+        .value.trim();
+
+    const day =
+        document.getElementById("editDay")
+        .value;
+
+    const time =
+        document.getElementById("editTime")
+        .value;
+
+    const payType =
+        document.getElementById("editPayType")
+        .value;
+
+    const amount =
+        Number(
+            document.getElementById("editAmount")
+            .value
+        );
+
+
+    if(!name){
+
+        alert("يرجى إدخال اسم الطالب.");
+
+        return;
+
+    }
+
+
+    if(!time){
+
+        alert("يرجى اختيار التوقيت.");
+
+        return;
+
+    }
+
+
+    if(Number.isNaN(amount) ||
+       amount < 0){
+
+        alert("المبلغ غير صحيح.");
+
+        return;
+
+    }
+
+
+    const oldPayType =
+        st.payType;
+
+
+    st.name = name;
+    st.grade = grade;
+    st.location = location;
+    st.day = day;
+    st.time = time;
+    st.payType = payType;
+    st.amount = amount;
+    st.termPlan = payType === "فصلي" ? document.getElementById("editTermPlan").value : "";
+    if(!Array.isArray(st.payments)) st.payments = [];
+
+
+    if(oldPayType !== payType){
+
+        st.nextDueLessonsCount = 4;
+
+    }else{
+
+        recalculatePayment(st);
+
+    }
+
+
+    saveData();
+
+    closeModal("editModal");
+
+    render();
+
+}
+
+
+/* =====================================================
+   DELETE STUDENT
+===================================================== */
+
+function deleteStudent(id){
+
+    const st =
+        students.find(
+            s => s.id === id
+        );
+
+    if(!st) return;
+
+
+    const confirmed =
+        confirm(
+            `هل أنت متأكد من حذف الطالب "${st.name}"؟`
+        );
+
+
+    if(!confirmed) return;
+
+
+    students =
+        students.filter(
+            s => s.id !== id
+        );
+
+
+    saveData();
+
+    closeModal("studentModal");
+
+    render();
+
+}
+
+
+/* =====================================================
+   GET WEEK
+===================================================== */
+
+function getWeek(){
+
+    const now = new Date();
+
+    const dayIndex =
+        now.getDay();
+
+
+    const sunday =
+        new Date(now);
+
+
+    sunday.setDate(
+        now.getDate() - dayIndex
+    );
+
+    sunday.setHours(
+        0,0,0,0
+    );
+
+
+    const week = [];
+
+
+    for(let i=0;i<7;i++){
+
+        const date =
+            new Date(sunday);
+
+
+        date.setDate(
+            sunday.getDate()+i
+        );
+
+
+        const y =
+            date.getFullYear();
+
+        const m =
+            String(date.getMonth()+1)
+            .padStart(2,"0");
+
+        const d =
+            String(date.getDate())
+            .padStart(2,"0");
+
+
+        week.push({
+
+            day:DAYS[i],
+
+            date:`${y}-${m}-${d}`
+
+        });
+
+    }
+
+
+    return week;
+
+}
+
+
+/* =====================================================
+   RENDER WEEK
+===================================================== */
+
+function renderWeekly(){
+
+    const container =
+        document.getElementById(
+            "weeklySchedule"
+        );
+
+
+    const week =
+        getWeek();
+
+
+    container.innerHTML =
+        week.map(item => {
+
+            const query = studentSearch.trim().toLocaleLowerCase("ar");
+            const dayStudents =
+                students
+                    .filter(st => {
+                        const matchesDay = st.day === item.day;
+                        const haystack = `${st.name || ""} ${st.grade || ""}`.toLocaleLowerCase("ar");
+                        return matchesDay && (!query || haystack.includes(query));
+                    })
+                    .sort(
+                        (a,b) =>
+                            a.time.localeCompare(
+                                b.time
+                            )
+                    );
+
+
+            let studentsHTML = "";
+
+
+            if(dayStudents.length === 0){
+
+                studentsHTML = `
+
+                    <div class="empty-day">
+                        —
+                    </div>
+
+                `;
+
+            }else{
+
+                studentsHTML =
+                    dayStudents
+                        .map(st => {
+
+                            const completed =
+                                Array.isArray(
+                                    st.completed
+                                ) &&
+                                st.completed.includes(
+                                    item.date
+                                );
+
+
+                            return `
+
+                                <div
+                                    class="student-card"
+                                    onclick="
+                                        openStudent(
+                                            '${st.id}'
+                                        )
+                                    "
+                                >
+
+                                    <div class="student-name">
+
+                                        ${
+                                            completed
+                                            ?
+                                            '<span class="completed-mark">✓</span>'
+                                            :
+                                            ''
+                                        }
+
+                                        ${escapeHTML(
+                                            st.name
+                                        )}
+
+                                    </div>
+
+                                    <div class="student-grade">
+
+                                        ${escapeHTML(
+                                            st.grade || "-"
+                                        )}
+
+                                    </div>
+
+                                    <div class="student-location">
+                                        ${escapeHTML(st.location || "")}
+                                    </div>
+
+                                    <div class="student-time">
+
+                                        ${escapeHTML(
+                                            st.time
+                                        )}
+
+                                    </div>
+
+                                </div>
+
+                            `;
+
+                        })
+                        .join("");
+
+            }
+
+
+            return `
+
+                <div class="day-column">
+
+                    <div class="day-header">
+
+                        ${item.day}
+
+                        <span class="day-date">
+                            ${formatDate(item.date)}
+                        </span>
+
+                    </div>
+
+                    <div class="students-list">
+
+                        ${studentsHTML}
+
+                    </div>
+
+                </div>
+
+            `;
+
+        })
+        .join("");
+
+}
+
+
+/* =====================================================
+   MONTHLY INCOME
+===================================================== */
+
+function renderIncome(){
+
+    const total =
+        students
+            .filter(
+                st =>
+                    st.payType === "شهري"
+            )
+            .reduce(
+                (sum,st) =>
+                    sum +
+                    Number(st.amount || 0),
+                0
+            );
+
+
+    document.getElementById(
+        "monthlyIncome"
+    ).textContent =
+        total.toLocaleString("ar-OM") +
+        " ر.ع";
+
+}
+
+
+/* =====================================================
+   SEARCH, SUMMARY AND BACKUP
+===================================================== */
+function setStudentSearch(value){
+    studentSearch = String(value || "");
+    renderWeekly();
+}
+
+function renderDashboardStats(){
+    const week = getWeek();
+    const todayDate = today();
+    const todayDay = DAYS[new Date().getDay()];
+    const todayCount = students.filter(st => st.day === todayDay).length;
+    const completedThisWeek = students.reduce((sum, st) => {
+        const dates = Array.isArray(st.completed) ? st.completed : [];
+        return sum + dates.filter(date => week.some(day => day.date === date)).length;
+    }, 0);
+    document.getElementById("totalStudents").textContent = students.length.toLocaleString("ar-OM");
+    document.getElementById("todayLessons").textContent = todayCount.toLocaleString("ar-OM");
+    document.getElementById("weekCompleted").textContent = completedThisWeek.toLocaleString("ar-OM");
+}
+
+function exportBackup(){
+    const payload = {
+        app: "جدولي - إدارة الدروس الخصوصية",
+        formatVersion: 1,
+        exportedAt: new Date().toISOString(),
+        students: students
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `نسخة-احتياطية-الدروس-${today()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function importBackup(event){
+    const file = event.target.files && event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(){
+        try{
+            const parsed = JSON.parse(String(reader.result || ""));
+            const incoming = Array.isArray(parsed) ? parsed : parsed.students;
+            if(!Array.isArray(incoming)) throw new Error("invalid backup");
+            const valid = incoming.every(st => st && typeof st === "object" && typeof st.name === "string");
+            if(!valid) throw new Error("invalid student records");
+            if(!confirm(`سيتم استبدال البيانات الحالية ببيانات النسخة الاحتياطية (${incoming.length} طالب). هل تريد المتابعة؟`)) return;
+            students = incoming.map(st => ({
+                ...st,
+                id: st.id || uid(),
+                completed: Array.isArray(st.completed) ? st.completed.map(String) : []
+            }));
+            students.forEach(st => {
+                if(typeof st.nextDueLessonsCount !== "number" || !st.nextDueLessonsCount){
+                    recalculatePayment(st);
+                }
+            });
+            if(saveData()){
+                studentSearch = "";
+                const search = document.getElementById("studentSearch");
+                if(search) search.value = "";
+                render();
+                alert("تمت استعادة النسخة الاحتياطية بنجاح.");
+            }
+        }catch(error){
+            alert("تعذر استيراد الملف. تأكد أنه ملف نسخة احتياطية صحيح صادر من التطبيق.");
+        }finally{
+            event.target.value = "";
+        }
+    };
+    reader.readAsText(file);
+}
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function render(){
+
+    renderWeekly();
+
+    renderIncome();
+
+    renderDashboardStats();
+
+}
+
+
+/* =====================================================
+   MODALS
+===================================================== */
+
+function openModal(id){
+
+    document
+        .getElementById(id)
+        .classList.add("show");
+
+}
+
+
+function closeModal(id){
+
+    document
+        .getElementById(id)
+        .classList.remove("show");
+
+}
+
+
+function closeModalOutside(
+    event,
+    id
+){
+
+    if(event.target.id === id){
+
+        closeModal(id);
+
+    }
+
+}
+
+
+/* =====================================================
+   AUTOMATIC SAVE
+===================================================== */
+
+/*
+   حفظ إضافي عند:
+   - مغادرة الصفحة
+   - إخفاء التطبيق
+   - إغلاق/تجميد الصفحة
+*/
+
+window.addEventListener(
+    "beforeunload",
+    function(){
+
+        saveData();
+
+    }
+);
+
+
+window.addEventListener(
+    "pagehide",
+    function(){
+
+        saveData();
+
+    }
+);
+
+
+document.addEventListener(
+    "visibilitychange",
+    function(){
+
+        if(document.visibilityState === "hidden"){
+
+            saveData();
+
+        }
+
+    }
+);
+
+
+/*
+   حفظ احتياطي دوري كل 5 ثوانٍ.
+   هذا مفيد خصوصاً عند تشغيل التطبيق
+   داخل WebView / AppsGeyser.
+*/
+
+setInterval(
+    function(){
+
+        saveData();
+
+    },
+    5000
+);
+
+
+/* =====================================================
+   START
+===================================================== */
+
+loadData();
+
+render();
+document.getElementById("addPayType")?.addEventListener("change", () => toggleTermPlan("add"));
+document.getElementById("editPayType")?.addEventListener("change", () => toggleTermPlan("edit"));
+
+</script>
+
+
+<script>
+// تسجيل خدمة PWA لتخزين التطبيق والعمل دون اتصال
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('تعذر تسجيل خدمة العمل دون اتصال:', err));
+  });
+}
+</script>
+
+</body>
+</html>
