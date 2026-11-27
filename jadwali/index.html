@@ -1464,10 +1464,13 @@ function openStudent(id){
 
         ${st.payType === "فصلي" ? `
         <div class="info-row"><span class="info-label">موعد السداد</span><span class="info-value">${escapeHTML(st.termPlan || "بداية الفصل")}</span></div>
-        <div class="info-row"><span class="info-label">المدفوع من الاشتراك</span><span class="info-value">${Number((st.payments||[]).reduce((a,p)=>a+Number(p.amount||0),0)).toLocaleString("ar-OM")} ر.ع</span></div>
-        <div class="info-row"><span class="info-label">المتبقي</span><span class="info-value">${Math.max(0,Number(st.amount||0)-(st.payments||[]).reduce((a,p)=>a+Number(p.amount||0),0)).toLocaleString("ar-OM")} ر.ع</span></div>
-        <div class="info-row"><span class="info-label">سجل الدفعات</span><span class="info-value">${(st.payments||[]).length ? (st.payments||[]).map(p => `${Number(p.amount||0).toLocaleString("ar-OM")} ر.ع – ${escapeHTML(p.date||"")}`).join(" | ") : "لا توجد دفعات مسجلة"}</span></div>
+        <div class="info-row"><span class="info-label">المبلغ المدفوع</span><span class="info-value">${Number((st.payments||[]).reduce((a,p)=>a+Number(p.amount||0),0)).toLocaleString("ar-OM")} ر.ع</span></div>
+        <div class="info-row"><span class="info-label">المبلغ المتبقي</span><span class="info-value">${Math.max(0,Number(st.amount||0)-(st.payments||[]).reduce((a,p)=>a+Number(p.amount||0),0)).toLocaleString("ar-OM")} ر.ع</span></div>
+        ` : st.payType === "شهري" ? `
+        <div class="info-row"><span class="info-label">الحصص المدفوعة المتبقية</span><span class="info-value">${monthlyCreditsLeft(st)} حصص</span></div>
+        <div class="info-row"><span class="info-label">الحصص المنجزة غير المدفوعة</span><span class="info-value">${unpaidLessons(st)} حصص</span></div>
         ` : ""}
+        <div class="info-row"><span class="info-label">سجل الدفعات</span><span class="info-value">${(st.payments||[]).length ? (st.payments||[]).map(p => `${Number(p.amount||0).toLocaleString("ar-OM")} ر.ع – ${escapeHTML(p.date||"")}`).join(" | ") : "لا توجد دفعات مسجلة"}</span></div>
         <div class="info-row">
             <span class="info-label">
                 الحصص حتى الدفع
