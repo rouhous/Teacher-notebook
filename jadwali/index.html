@@ -1516,22 +1516,10 @@ function openStudent(id){
    COMPLETE SELECTED DATE
 ===================================================== */
 
-function recordTermPayment(studentId){
-    const st = students.find(s => s.id === studentId);
-    if(!st) return;
-    const raw = prompt("أدخل قيمة الدفعة المستلمة (ر.ع):");
-    if(raw === null) return;
-    const amount = Number(raw);
-    if(!Number.isFinite(amount) || amount <= 0){ alert("يرجى إدخال مبلغ صحيح أكبر من صفر."); return; }
-    const paid = (st.payments || []).reduce((sum,p)=>sum+Number(p.amount||0),0);
-    const remaining = Math.max(0, Number(st.amount||0)-paid);
-    if(amount > remaining){ alert("قيمة الدفعة أكبر من المبلغ المتبقي: " + remaining.toLocaleString("ar-OM") + " ر.ع"); return; }
-    if(!Array.isArray(st.payments)) st.payments = [];
-    st.payments.push({id:uid(), amount, date:today()});
-    saveData();
-    openStudent(studentId);
-    render();
-}
+function totalPaid(st){return (st.payments||[]).reduce((a,p)=>a+Number(p.amount||0),0);}
+function monthlyCreditsLeft(st){const credits=(st.payments||[]).reduce((a,p)=>a+Number(p.lessonCredits||4),0);return Math.max(0,credits-(st.completed||[]).length);}
+function unpaidLessons(st){const credits=(st.payments||[]).reduce((a,p)=>a+Number(p.lessonCredits||4),0);return Math.max(0,(st.completed||[]).length-credits);}
+function openPaymentModal(id){const st=students.find(s=>s.id===id);if(!st)return;currentStudentId=id;const amount=prompt("أدخل المبلغ المدفوع (ر.ع):");if(amount===null)return;const date=prompt("أدخل تاريخ الدفع بصيغة YYYY-MM-DD:",today());if(date===null)return;const value=Number(amount);if(!Number.isFinite(value)||value<=0){alert("أدخل مبلغاً صحيحاً.");return;}if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){alert("صيغة التاريخ غير صحيحة.");return;}if(st.payType==="فصلي"&&value>Math.max(0,Number(st.amount||0)-totalPaid(st))&&!confirm("المبلغ يتجاوز المتبقي. تسجيله؟"))return;if(!Array.isArray(st.payments))st.payments=[];st.payments.push({id:uid(),amount:value,date:date,lessonCredits:st.payType==="شهري"?4:0});st.payments.sort((x,y)=>String(x.date).localeCompare(String(y.date)));saveData();render();openStudent(id);}
 
 function completeSelectedLesson(){
 
