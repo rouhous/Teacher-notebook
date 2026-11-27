@@ -1575,29 +1575,13 @@ function completeSelectedLesson(){
 
 
     if(st.payType === "شهري"){
-
-        st.nextDueLessonsCount--;
-
-        if(st.nextDueLessonsCount <= 0){
-
-            st.nextDueLessonsCount = 4;
-
-            saveData();
-
-            render();
-
-            openStudent(id);
-
-            alert(
-                "تم إكمال 4 حصص.\nحان موعد الدفع."
-            );
-
+        st.nextDueLessonsCount=monthlyCreditsLeft(st);
+        if(st.nextDueLessonsCount===0 && unpaidLessons(st)>0){
+            saveData(); render(); openStudent(id);
+            alert("اكتملت الحصص الأربع المدفوعة. توجد حصص غير مدفوعة؛ سجّل الدفعة التالية عند استلامها.");
             return;
-
         }
-
     }
-
 
     saveData();
 
