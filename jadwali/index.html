@@ -2276,29 +2276,14 @@ function renderWeekly(){
 ===================================================== */
 
 function renderIncome(){
-
-    const total =
-        students
-            .filter(
-                st =>
-                    st.payType === "شهري"
-            )
-            .reduce(
-                (sum,st) =>
-                    sum +
-                    Number(st.amount || 0),
-                0
-            );
-
-
-    document.getElementById(
-        "monthlyIncome"
-    ).textContent =
-        total.toLocaleString("ar-OM") +
-        " ر.ع";
-
+    const monthKey=today().slice(0,7);
+    const total=students.filter(st=>st.payType==="شهري").reduce((sum,st)=>sum+Number(st.amount||0),0);
+    const paidThisMonth=students.filter(st=>st.payType==="شهري").reduce((sum,st)=>sum+(st.payments||[]).filter(p=>String(p.date||"").slice(0,7)===monthKey).reduce((a,p)=>a+Number(p.amount||0),0),0);
+    const remaining=Math.max(0,total-paidThisMonth);
+    document.getElementById("monthlyIncome").textContent=remaining.toLocaleString("ar-OM")+" ر.ع";
+    const label=document.querySelector(".income-label");
+    if(label)label.textContent="المتبقي من المداخيل الشهرية لهذا الشهر";
 }
-
 
 /* =====================================================
    SEARCH, SUMMARY AND BACKUP
