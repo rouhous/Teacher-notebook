@@ -615,8 +615,8 @@ input:focus,select:focus{outline:2px solid #9bd8bd!important;border-color:#16845
 <meta name="theme-color" content="#137a52">
 <meta name="description" content="جدولي لإدارة الطلاب والحصص والاشتراكات والمدفوعات. تحفظ البيانات محلياً على جهاز المستخدم.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+
 
 </head>
 
@@ -1473,7 +1473,7 @@ function openStudent(id){
         <div class="info-row"><span class="info-label">سجل الدفعات</span><span class="info-value">${(st.payments||[]).length ? (st.payments||[]).map(p => `${Number(p.amount||0).toLocaleString("ar-OM")} ر.ع – ${escapeHTML(p.date||"")}`).join(" | ") : "لا توجد دفعات مسجلة"}</span></div>
         <div class="info-row">
             <span class="info-label">
-                الحصص حتى الدفع
+                الحصص المدفوعة المتبقية
             </span>
 
             <span class="info-value">
