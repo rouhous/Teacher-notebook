@@ -1490,7 +1490,7 @@ function openStudent(id){
             ✓ تسجيل الحصة بالتاريخ المختار
         </button>
 
-        ${st.payType === "فصلي" ? `<button class="secondary-btn" onclick="recordTermPayment('${st.id}')">＋ تسجيل دفعة فصليّة</button>` : ""}
+        ${(st.payType === "فصلي" || st.payType === "شهري") ? `<button class="secondary-btn" onclick="openPaymentModal('${st.id}')">＋ تسجيل مبلغ مدفوع</button>` : ""}
 
         <button class="secondary-btn"
                 onclick="openEdit('${st.id}')">
@@ -1742,25 +1742,8 @@ function deleteCompletedDate(
 ===================================================== */
 
 function recalculatePayment(st){
-
-    if(st.payType !== "شهري"){
-
-        st.nextDueLessonsCount = 4;
-
-        return;
-
-    }
-
-
-    const count =
-        st.completed.length % 4;
-
-
-    st.nextDueLessonsCount =
-        count === 0
-            ? 4
-            : 4 - count;
-
+    if(st.payType !== "شهري"){st.nextDueLessonsCount=4;return;}
+    st.nextDueLessonsCount=monthlyCreditsLeft(st);
 }
 
 
