@@ -795,7 +795,7 @@ input:focus,select:focus{outline:2px solid #9bd8bd!important;border-color:#16845
 <div id="paymentModal" class="modal" onclick="closeModalOutside(event,'paymentModal')">
  <div class="modal-box">
   <div class="modal-title">تسجيل دفعة جديدة</div>
-  <div class="form-group"><label>المبلغ المدفوع (ر.ع)</label><input id="paymentAmount" type="number" min="0.001" step="0.001" inputmode="decimal" placeholder="أدخل المبلغ"></div>
+  <div class="form-group" id="paymentAmountGroup"><label>المبلغ المدفوع (ر.ع)</label><input id="paymentAmount" type="number" min="0.001" step="0.001" inputmode="decimal" placeholder="أدخل المبلغ"></div>
   <div class="form-group"><label>تاريخ الدفع</label><input id="paymentDate" type="date" lang="en-US" dir="ltr"></div>
   <div id="paymentHint" style="font-size:12px;color:#64716d;margin:5px 0"></div>
   <button class="primary-btn" onclick="submitPayment()">حفظ الدفعة</button>
@@ -1537,16 +1537,21 @@ function unpaidLessons(st){const credits=(st.payments||[]).reduce((a,p)=>a+Numbe
 function openPaymentModal(id){
  const st=students.find(s=>s.id===id);if(!st)return;
  currentStudentId=id;
- document.getElementById("paymentAmount").value="";
+ const monthly=st.payType==="شهري";
+ const amountGroup=document.getElementById("paymentAmountGroup");
+ amountGroup.style.display=monthly?"none":"";
+ document.getElementById("paymentAmount").value=monthly?Number(st.amount||0):"";
  document.getElementById("paymentDate").value=today();
- document.getElementById("paymentHint").textContent=st.payType==="شهري"?"الدفعة الشهرية تغطي 4 حصص.":"يُسجل المبلغ وتاريخه ويُحسب المتبقي دون احتساب الحصص.";
+ document.getElementById("paymentHint").textContent=monthly
+  ? "سيُسجّل مبلغ الاشتراك الشهري المحفوظ تلقائياً، ويكفي اختيار تاريخ الدفع."
+  : "أدخل المبلغ المدفوع واختر تاريخ استلامه.";
  openModal("paymentModal");
 }
 function submitPayment(){
  const st=students.find(s=>s.id===currentStudentId);if(!st)return;
- const value=Number(document.getElementById("paymentAmount").value);
+ const value=st.payType==="شهري"?Number(st.amount||0):Number(document.getElementById("paymentAmount").value);
  const date=document.getElementById("paymentDate").value;
- if(!Number.isFinite(value)||value<=0){alert("أدخل مبلغاً صحيحاً أكبر من صفر.");return;}
+ if(!Number.isFinite(value)||value<=0){alert("يرجى التأكد من تسجيل قيمة الاشتراك الشهري في بيانات الطالب.");return;}
  if(!date){alert("يرجى اختيار تاريخ الدفع.");return;}
  if(st.payType==="فصلي"&&value>Math.max(0,Number(st.amount||0)-totalPaid(st))&&!confirm("المبلغ يتجاوز المتبقي. هل تريد تسجيله؟"))return;
  if(!Array.isArray(st.payments))st.payments=[];
