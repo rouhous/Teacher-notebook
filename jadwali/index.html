@@ -1025,6 +1025,16 @@ body{margin:0}
  #weeklySchedule .students-list .student-card .student-mainline .student-grade{font-size:8px!important}
 }
 
+
+/* Slightly shorten top title and weekly header to keep the final Saturday card visible */
+.app-title,.page-title,.header-title{font-size:clamp(15px,4vw,19px)!important;line-height:1.05!important}
+#weeklySchedule .day-header{height:16px!important;min-height:16px!important;padding:1px 0!important;font-size:7.5px!important;line-height:13px!important}
+#weeklySchedule .student-card{padding-top:4px!important;padding-bottom:4px!important;gap:2px!important}
+#weeklySchedule .student-subline{gap:1px!important}
+#weeklySchedule .student-location{font-size:7px!important;line-height:1.05!important}
+#weeklySchedule .student-time{font-size:8px!important;line-height:1.05!important}
+#weeklySchedule .lesson-counter{font-size:6.5px!important;line-height:1.05!important;margin-top:1px!important}
+
 </style>
 
 <meta name="theme-color" content="#137a52">
@@ -2532,14 +2542,18 @@ function getWeek(){
 ===================================================== */
 
 function getLessonCycleStatus(st){
- const completed=Array.isArray(st.completed)?st.completed.length:0;
- if(st.payType!=="شهري")return {label:"الحصص: "+completed,color:"neutral",count:completed};
- const credits=(st.payments||[]).reduce((sum,p)=>sum+Math.max(0,Number(p.lessonCredits===undefined?4:p.lessonCredits)),0);
- const remaining=Math.max(0,credits-completed);
- const unpaid=Math.max(0,completed-credits);
- if(unpaid>0)return {label:"غير مدفوع "+unpaid+"/4",color:"unpaid",count:completed};
- if(remaining>0)return {label:"مدفوع – "+remaining+" متبقية",color:"paid",count:completed};
- return {label:"بانتظار الدفع",color:"unpaid",count:completed};
+ const monthKey=today().slice(0,7);
+ const allCompleted=Array.isArray(st.completed)?st.completed:[];
+ const completedThisMonth=allCompleted.filter(d=>String(d).slice(0,7)===monthKey).length;
+ if(st.payType!=="شهري")return {label:"الحصص: "+allCompleted.length,color:"neutral",count:allCompleted.length};
+ const monthPayments=(st.payments||[]).filter(p=>String(p.date||"").slice(0,7)===monthKey);
+ let paidCredits=monthPayments.reduce((sum,p)=>sum+Math.max(0,Number(p.lessonCredits===undefined?4:p.lessonCredits)),0);
+ // No lesson has been registered this month: treat the monthly subscription as paid by default.
+ if(completedThisMonth===0 && monthPayments.length===0)paidCredits=4;
+ const balance=paidCredits-completedThisMonth;
+ if(balance>0)return {label:"دفع (−"+balance+")",color:"paid",count:completedThisMonth};
+ if(completedThisMonth>0)return {label:completedThisMonth+"/4",color:"unpaid",count:completedThisMonth};
+ return {label:"دفع (−4)",color:"paid",count:0};
 }
 
 function renderWeekly(){
@@ -2577,7 +2591,13 @@ function renderIncome(){
     const monthKey=today().slice(0,7);
     const monthlyStudents=students.filter(st=>st.payType==="شهري");
     const monthlyTotal=monthlyStudents.reduce((sum,st)=>sum+Number(st.amount||0),0);
-    const monthlyPaid=monthlyStudents.reduce((sum,st)=>sum+(st.payments||[]).filter(p=>String(p.date||"").slice(0,7)===monthKey).reduce((a,p)=>a+Number(p.amount||0),0),0);
+    const monthlyPaid=monthlyStudents.reduce((sum,st)=>{
+        const monthPayments=(st.payments||[]).filter(p=>String(p.date||"").slice(0,7)===monthKey);
+        const completedThisMonth=(Array.isArray(st.completed)?st.completed:[]).filter(d=>String(d).slice(0,7)===monthKey).length;
+        const received=monthPayments.reduce((a,p)=>a+Number(p.amount||0),0);
+        // If no lesson has been logged this month and no payment was entered, assume the monthly fee is paid.
+        return sum+(monthPayments.length?received:(completedThisMonth===0?Number(st.amount||0):0));
+    },0);
     const monthlyRemaining=Math.max(0,monthlyTotal-monthlyPaid);
     const termStudents=students.filter(st=>st.payType==="فصلي");
     const termTotal=termStudents.reduce((sum,st)=>sum+Number(st.amount||0),0);
