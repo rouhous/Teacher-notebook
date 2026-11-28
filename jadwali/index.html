@@ -902,6 +902,14 @@ body{margin:0}
  .finance-group b{font-size:10px!important}
 }
 
+
+/* Compact lesson progress counter on each student card */
+#weeklySchedule .lesson-counter{font-size:7px!important;line-height:1.15!important;font-weight:900!important;white-space:nowrap!important;margin-top:1px!important}
+#weeklySchedule .lesson-counter.unpaid{color:#d62828!important}
+#weeklySchedule .lesson-counter.paid{color:#16834f!important}
+#weeklySchedule .lesson-counter.neutral{color:#52616a!important}
+@media(max-width:390px){#weeklySchedule .lesson-counter{font-size:6.5px!important}}
+
 </style>
 
 <meta name="theme-color" content="#137a52">
@@ -2408,6 +2416,17 @@ function getWeek(){
    RENDER WEEK
 ===================================================== */
 
+function getLessonCycleStatus(st){
+ const completed=Array.isArray(st.completed)?st.completed.length:0;
+ if(st.payType!=="شهري")return {label:"الحصص: "+completed,color:"neutral",count:completed};
+ const credits=(st.payments||[]).reduce((sum,p)=>sum+Math.max(0,Number(p.lessonCredits===undefined?4:p.lessonCredits)),0);
+ const remaining=Math.max(0,credits-completed);
+ const unpaid=Math.max(0,completed-credits);
+ if(unpaid>0)return {label:"غير مدفوع "+unpaid+"/4",color:"unpaid",count:completed};
+ if(remaining>0)return {label:"مدفوع – "+remaining+" متبقية",color:"paid",count:completed};
+ return {label:"بانتظار الدفع",color:"unpaid",count:completed};
+}
+
 function renderWeekly(){
     const container=document.getElementById("weeklySchedule");
     const week=getWeek();
@@ -2415,6 +2434,7 @@ function renderWeekly(){
         const dayStudents=students.filter(st=>st.day===item.day).sort((a,b)=>String(a.time||"").localeCompare(String(b.time||"")));
         const studentsHTML=dayStudents.length?dayStudents.map(st=>{
             const completed=Array.isArray(st.completed)&&st.completed.includes(item.date);
+            const cycle=getLessonCycleStatus(st);
             return `<div class="student-card" onclick="openStudent('${st.id}')">
                 <div class="student-mainline">
                     <span class="student-name">${completed?'<span class="completed-mark">✓</span>':''}${escapeHTML(st.name||"")}</span>
@@ -2424,6 +2444,7 @@ function renderWeekly(){
                     <span class="student-location">${escapeHTML(st.location||"")}</span>
                     <span class="student-time">${escapeHTML(st.time||"")}</span>
                 </div>
+                <div class="lesson-counter ${cycle.color}">${escapeHTML(cycle.label)}</div>
             </div>`;
         }).join(""):'<div class="empty-day">—</div>';
         return `<div class="day-column">
