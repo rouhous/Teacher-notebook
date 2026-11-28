@@ -2544,19 +2544,33 @@ function getWeek(){
    RENDER WEEK
 ===================================================== */
 
+function monthlyCreditLedger(st){
+ const events=[];
+ (Array.isArray(st.payments)?st.payments:[]).forEach((p,i)=>{
+  const date=String(p.date||"");
+  if(date)events.push({date,kind:0,credits:Math.max(0,Number(p.lessonCredits===undefined?4:p.lessonCredits)),index:i});
+ });
+ (Array.isArray(st.completed)?st.completed:[]).forEach((date,i)=>{
+  if(date)events.push({date:String(date),kind:1,credits:0,index:i});
+ });
+ events.sort((a,b)=>a.date.localeCompare(b.date)||a.kind-b.kind||a.index-b.index);
+ let balance=0,completedAfterZero=0;
+ for(const e of events){
+  if(e.kind===0){balance+=e.credits;if(balance>0)completedAfterZero=0;}
+  else{balance--;if(balance<0)completedAfterZero++;}
+ }
+ return {balance,unpaid:Math.max(0,completedAfterZero),completed:(st.completed||[]).length};
+}
+function monthlyCreditsLeft(st){return Math.max(0,monthlyCreditLedger(st).balance);}
+function unpaidLessons(st){return monthlyCreditLedger(st).unpaid;}
 function getLessonCycleStatus(st){
- const monthKey=today().slice(0,7);
- const allCompleted=Array.isArray(st.completed)?st.completed:[];
- const completedThisMonth=allCompleted.filter(d=>String(d).slice(0,7)===monthKey).length;
- if(st.payType!=="شهري")return {label:"الحصص: "+allCompleted.length,color:"neutral",count:allCompleted.length};
- const monthPayments=(st.payments||[]).filter(p=>String(p.date||"").slice(0,7)===monthKey);
- let paidCredits=monthPayments.reduce((sum,p)=>sum+Math.max(0,Number(p.lessonCredits===undefined?4:p.lessonCredits)),0);
- // No lesson has been registered this month: treat the monthly subscription as paid by default.
- if(completedThisMonth===0 && monthPayments.length===0)paidCredits=4;
- const balance=paidCredits-completedThisMonth;
- if(balance>0)return {label:"دفع (−"+balance+")",color:"paid",count:completedThisMonth};
- if(completedThisMonth>0)return {label:completedThisMonth+"/4",color:"unpaid",count:completedThisMonth};
- return {label:"دفع (−4)",color:"paid",count:0};
+ const ledger=monthlyCreditLedger(st);
+ if(st.payType!=="شهري")return {label:"الحصص: "+ledger.completed,color:"neutral",count:ledger.completed};
+ // Keep the automatic paid status for a new monthly student with no lesson/payment history.
+ if(!(st.completed||[]).length && !(st.payments||[]).length)return {label:"دفع (−4)",color:"paid",count:0};
+ if(ledger.balance>0)return {label:"دفع (−"+ledger.balance+")",color:"paid",count:ledger.completed};
+ if(ledger.unpaid>0)return {label:ledger.unpaid+"/4",color:"unpaid",count:ledger.completed};
+ return {label:"0",color:"neutral",count:ledger.completed};
 }
 
 function renderWeekly(){
