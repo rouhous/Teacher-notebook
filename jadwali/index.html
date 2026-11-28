@@ -1039,6 +1039,11 @@ body{margin:0}
 /* Remove the statistics row and give the weekly schedule its space */
 #weeklySchedule{margin-top:2px!important;flex:1 1 auto!important;min-height:0!important}
 
+
+.title-group{display:flex!important;align-items:center!important;gap:7px!important}
+.refresh-page-btn{width:29px!important;height:29px!important;min-width:29px!important;padding:0!important;border:1px solid #d8e7df!important;border-radius:50%!important;background:#eef8f2!important;color:#167b53!important;font-size:22px!important;font-weight:900!important;line-height:1!important;box-shadow:0 2px 4px rgba(0,0,0,.12)!important;cursor:pointer!important}
+.refresh-page-btn:disabled{opacity:.6}
+
 </style>
 
 <meta name="theme-color" content="#137a52">
@@ -1058,7 +1063,7 @@ body{margin:0}
     <div class="header">
 
         <div class="header-top compact-actions">
-            <div class="title">جدولي</div>
+            <div class="title-group"><div class="title">جدولي</div><button type="button" class="refresh-page-btn" onclick="forceRefreshApp()" title="تحديث التطبيق" aria-label="تحديث التطبيق">⟳</button></div>
             <div class="top-actions">
                 <button class="add-btn icon-action" title="إضافة طالب" aria-label="إضافة طالب" onclick="openAddModal()">＋</button>
                 <button class="tool-btn backup icon-action" title="نسخة احتياطية" aria-label="نسخة احتياطية" onclick="exportBackup()">↓</button>
@@ -2689,6 +2694,24 @@ function importBackup(event){
 /* =====================================================
    RENDER
 ===================================================== */
+
+async function forceRefreshApp(){
+ const btn=document.querySelector(".refresh-page-btn");
+ if(btn){btn.disabled=true;btn.textContent="…";}
+ try{
+  if("serviceWorker" in navigator){
+   const regs=await navigator.serviceWorker.getRegistrations();
+   await Promise.all(regs.filter(reg=>new URL(reg.scope).pathname.includes("/Teacher-notebook/jadwali/")).map(reg=>reg.unregister()));
+  }
+  if("caches" in window){
+   const keys=await caches.keys();
+   await Promise.all(keys.filter(k=>k.startsWith("jadwali-pwa-")).map(k=>caches.delete(k)));
+  }
+ }catch(e){console.warn("Refresh cleanup:",e);}
+ const target=new URL(window.location.href);
+ target.searchParams.set("refresh",Date.now().toString());
+ window.location.replace(target.toString());
+}
 
 function render(){
 
