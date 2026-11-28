@@ -910,6 +910,79 @@ body{margin:0}
 #weeklySchedule .lesson-counter.neutral{color:#52616a!important}
 @media(max-width:390px){#weeklySchedule .lesson-counter{font-size:6.5px!important}}
 
+
+/* v13: force schedule cards to use their content height */
+#weeklySchedule .day-column{
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:stretch!important;
+ justify-content:flex-start!important;
+ min-height:0!important;
+ height:100%!important;
+ overflow:hidden!important;
+}
+#weeklySchedule .students-list{
+ display:flex!important;
+ flex-direction:column!important;
+ flex:0 0 auto!important;
+ height:auto!important;
+ min-height:0!important;
+ align-items:stretch!important;
+ justify-content:flex-start!important;
+ gap:5px!important;
+ overflow:visible!important;
+}
+#weeklySchedule .students-list > .student-card{
+ display:flex!important;
+ flex:0 0 auto!important;
+ flex-direction:column!important;
+ align-items:center!important;
+ justify-content:center!important;
+ align-self:stretch!important;
+ height:auto!important;
+ min-height:0!important;
+ padding:6px 2px!important;
+ margin:0 2px!important;
+ gap:3px!important;
+ overflow:visible!important;
+}
+#weeklySchedule .student-mainline,
+#weeklySchedule .student-subline{
+ display:flex!important;
+ flex-direction:column!important;
+ flex:0 0 auto!important;
+ align-items:center!important;
+ justify-content:center!important;
+ width:100%!important;
+ height:auto!important;
+ gap:2px!important;
+ white-space:normal!important;
+}
+#weeklySchedule .student-name{
+ display:block!important;
+ width:100%!important;
+ max-width:100%!important;
+ font-size:10px!important;
+ line-height:1.25!important;
+ white-space:normal!important;
+ overflow:visible!important;
+ text-overflow:clip!important;
+ overflow-wrap:anywhere!important;
+}
+#weeklySchedule .student-grade{font-size:8px!important;line-height:1.2!important}
+#weeklySchedule .student-location{max-width:100%!important;font-size:8px!important;white-space:normal!important;overflow:visible!important}
+#weeklySchedule .student-time{font-size:9px!important}
+#weeklySchedule .lesson-counter{display:block!important;flex:0 0 auto!important;font-size:7px!important;line-height:1.2!important;white-space:normal!important;margin-top:2px!important}
+#weeklySchedule .empty-day{flex:1 1 auto!important}
+@media(max-width:390px){
+ #weeklySchedule .students-list{gap:4px!important}
+ #weeklySchedule .students-list > .student-card{padding:5px 1px!important}
+ #weeklySchedule .student-name{font-size:9px!important}
+ #weeklySchedule .student-grade,#weeklySchedule .student-location{font-size:7px!important}
+ #weeklySchedule .student-time{font-size:8px!important}
+ #weeklySchedule .lesson-counter{font-size:6.5px!important}
+}
+
 </style>
 
 <meta name="theme-color" content="#137a52">
