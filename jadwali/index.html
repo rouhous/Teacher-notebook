@@ -2554,23 +2554,22 @@ function monthlyCreditLedger(st){
   if(date)events.push({date:String(date),kind:1,credits:0,index:i});
  });
  events.sort((a,b)=>a.date.localeCompare(b.date)||a.kind-b.kind||a.index-b.index);
- let balance=0,completedAfterZero=0;
+ let balance=0;
  for(const e of events){
-  if(e.kind===0){balance+=e.credits;if(balance>0)completedAfterZero=0;}
-  else{balance--;if(balance<0)completedAfterZero++;}
+  if(e.kind===0)balance+=e.credits;
+  else balance--;
  }
- return {balance,unpaid:Math.max(0,completedAfterZero),completed:(st.completed||[]).length};
+ // Payments first cover lessons already completed; only the positive remainder
+ // represents prepaid future lessons. Zero means no prepaid lessons remain.
+ return {balance,unpaid:Math.max(0,-balance),completed:(st.completed||[]).length};
 }
 function monthlyCreditsLeft(st){return Math.max(0,monthlyCreditLedger(st).balance);}
 function unpaidLessons(st){return monthlyCreditLedger(st).unpaid;}
 function getLessonCycleStatus(st){
  const ledger=monthlyCreditLedger(st);
  if(st.payType!=="شهري")return {label:"الحصص: "+ledger.completed,color:"neutral",count:ledger.completed};
- // Keep the automatic paid status for a new monthly student with no lesson/payment history.
- if(!(st.completed||[]).length && !(st.payments||[]).length)return {label:"دفع (−4)",color:"paid",count:0};
  if(ledger.balance>0)return {label:"دفع (−"+ledger.balance+")",color:"paid",count:ledger.completed};
- if(ledger.unpaid>0)return {label:ledger.unpaid+"/4",color:"unpaid",count:ledger.completed};
- return {label:"0",color:"neutral",count:ledger.completed};
+ return {label:Math.max(0,-ledger.balance)+"/4",color:"unpaid",count:ledger.completed};
 }
 
 function renderWeekly(){
