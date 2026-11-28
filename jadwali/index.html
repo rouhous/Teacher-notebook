@@ -720,6 +720,20 @@ input:focus,select:focus{outline:2px solid #9bd8bd!important;border-color:#16845
   #studentModal #studentActions button{font-size:9px;min-height:33px}
 }
 
+
+/* Compact financial summary */
+.finance-strip{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px;padding:6px;background:#edf7f1;border:1px solid #cde7d7;border-radius:10px}
+.finance-group{display:flex;align-items:center;justify-content:space-around;gap:5px;min-width:0;flex-wrap:wrap;font-size:10px;color:#52615a;line-height:1.35}
+.finance-group+ .finance-group{border-right:1px solid #c8ddd0}
+.finance-heading{font-weight:800;color:#176746;width:100%;text-align:center;font-size:10px}
+.finance-group b{color:#263238;font-size:10px;white-space:nowrap}
+.finance-group .finance-remaining{color:#16845b}
+.compact-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:5px}
+.compact-stats .stat-card{padding:4px 2px;border-radius:7px}
+.compact-stats .stat-label{font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compact-stats .stat-value{font-size:12px;margin-top:0}
+@media(max-width:380px){.finance-strip{gap:2px;padding:4px}.finance-group{font-size:9px;gap:3px}.finance-group b{font-size:9px}.finance-heading{font-size:9px}}
+
 </style>
 
 <meta name="theme-color" content="#137a52">
@@ -750,24 +764,25 @@ input:focus,select:focus{outline:2px solid #9bd8bd!important;border-color:#16845
 
         </div>
 
-        <div class="income-box">
-
-            <div class="income-label">
-                مجموع المداخيل الشهرية
-            </div>
-
-            <div class="income-value" id="monthlyIncome">
-                0 ر.ع
-            </div>
-
+        <div class="finance-strip" aria-label="ملخص الاشتراكات">
+          <div class="finance-group">
+            <span class="finance-heading">الاشتراك الشهري</span>
+            <span>الإجمالي <b id="monthlyTotal">0</b></span>
+            <span>المتبقي <b class="finance-remaining" id="monthlyIncome">0</b></span>
+          </div>
+          <div class="finance-group">
+            <span class="finance-heading">الاشتراك الفصلي</span>
+            <span>الإجمالي <b id="termTotal">0</b></span>
+            <span>المتبقي <b class="finance-remaining" id="termRemaining">0</b></span>
+          </div>
         </div>
 
     </div>
 
-    <div class="dashboard-stats" aria-label="ملخص سريع">
-        <div class="stat-card"><span class="stat-label">إجمالي الطلاب</span><strong class="stat-value" id="totalStudents">0</strong></div>
+    <div class="dashboard-stats compact-stats" aria-label="ملخص سريع">
+        <div class="stat-card"><span class="stat-label">الطلاب</span><strong class="stat-value" id="totalStudents">0</strong></div>
         <div class="stat-card"><span class="stat-label">حصص اليوم</span><strong class="stat-value" id="todayLessons">0</strong></div>
-        <div class="stat-card"><span class="stat-label">حصص مكتملة هذا الأسبوع</span><strong class="stat-value" id="weekCompleted">0</strong></div>
+        <div class="stat-card"><span class="stat-label">مكتملة هذا الأسبوع</span><strong class="stat-value" id="weekCompleted">0</strong></div>
     </div>
 
     <div class="schedule-tools">
@@ -2379,12 +2394,19 @@ function renderWeekly(){
 
 function renderIncome(){
     const monthKey=today().slice(0,7);
-    const total=students.filter(st=>st.payType==="شهري").reduce((sum,st)=>sum+Number(st.amount||0),0);
-    const paidThisMonth=students.filter(st=>st.payType==="شهري").reduce((sum,st)=>sum+(st.payments||[]).filter(p=>String(p.date||"").slice(0,7)===monthKey).reduce((a,p)=>a+Number(p.amount||0),0),0);
-    const remaining=Math.max(0,total-paidThisMonth);
-    document.getElementById("monthlyIncome").textContent=remaining.toLocaleString("ar-OM")+" ر.ع";
-    const label=document.querySelector(".income-label");
-    if(label)label.textContent="المتبقي من المداخيل الشهرية لهذا الشهر";
+    const monthlyStudents=students.filter(st=>st.payType==="شهري");
+    const monthlyTotal=monthlyStudents.reduce((sum,st)=>sum+Number(st.amount||0),0);
+    const monthlyPaid=monthlyStudents.reduce((sum,st)=>sum+(st.payments||[]).filter(p=>String(p.date||"").slice(0,7)===monthKey).reduce((a,p)=>a+Number(p.amount||0),0),0);
+    const monthlyRemaining=Math.max(0,monthlyTotal-monthlyPaid);
+    const termStudents=students.filter(st=>st.payType==="فصلي");
+    const termTotal=termStudents.reduce((sum,st)=>sum+Number(st.amount||0),0);
+    const termPaid=termStudents.reduce((sum,st)=>sum+totalPaid(st),0);
+    const termRemaining=Math.max(0,termTotal-termPaid);
+    const fmt=v=>Number(v||0).toLocaleString("ar-OM",{maximumFractionDigits:3})+" ر.ع";
+    document.getElementById("monthlyTotal").textContent=fmt(monthlyTotal);
+    document.getElementById("monthlyIncome").textContent=fmt(monthlyRemaining);
+    document.getElementById("termTotal").textContent=fmt(termTotal);
+    document.getElementById("termRemaining").textContent=fmt(termRemaining);
 }
 
 /* =====================================================
