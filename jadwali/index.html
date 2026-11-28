@@ -1035,6 +1035,10 @@ body{margin:0}
 #weeklySchedule .student-time{font-size:8px!important;line-height:1.05!important}
 #weeklySchedule .lesson-counter{font-size:6.5px!important;line-height:1.05!important;margin-top:1px!important}
 
+
+/* Remove the statistics row and give the weekly schedule its space */
+#weeklySchedule{margin-top:2px!important;flex:1 1 auto!important;min-height:0!important}
+
 </style>
 
 <meta name="theme-color" content="#137a52">
@@ -1076,12 +1080,6 @@ body{margin:0}
           </div>
         </div>
 
-    </div>
-
-    <div class="dashboard-stats compact-stats" aria-label="ملخص سريع">
-        <div class="stat-card"><span class="stat-label">الطلاب</span><strong class="stat-value" id="totalStudents">0</strong></div>
-        <div class="stat-card"><span class="stat-label">حصص اليوم</span><strong class="stat-value" id="todayLessons">0</strong></div>
-        <div class="stat-card"><span class="stat-label">مكتملة هذا الأسبوع</span><strong class="stat-value" id="weekCompleted">0</strong></div>
     </div>
 
     <div id="weeklySchedule" class="week-table"></div>
