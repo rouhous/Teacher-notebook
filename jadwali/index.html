@@ -1680,6 +1680,8 @@ function openPaymentModal(id){
  document.getElementById("paymentHint").textContent=monthly
   ? "سيُسجّل مبلغ الاشتراك الشهري المحفوظ تلقائياً، ويكفي اختيار تاريخ الدفع."
   : "أدخل المبلغ المدفوع واختر تاريخ استلامه.";
+ // Close student details first so the payment window is shown in front.
+ closeModal("studentModal");
  openModal("paymentModal");
 }
 function submitPayment(){
