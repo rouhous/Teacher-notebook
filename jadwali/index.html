@@ -734,6 +734,13 @@ input:focus,select:focus{outline:2px solid #9bd8bd!important;border-color:#16845
 .compact-stats .stat-value{font-size:12px;margin-top:0}
 @media(max-width:380px){.finance-strip{gap:2px;padding:4px}.finance-group{font-size:9px;gap:3px}.finance-group b{font-size:9px}.finance-heading{font-size:9px}}
 
+
+/* Stable ISO date display: avoids Android RTL native date segment reversal */
+.date-picker-wrap{position:relative;width:100%;min-height:44px;direction:ltr!important}
+.date-picker-wrap .native-date-source{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;opacity:0!important;z-index:2!important;pointer-events:none!important;padding:0!important;border:0!important}
+.date-picker-display{width:100%;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;border:1px solid #d4ded9;border-radius:11px;background:#fff;color:#263238;font:inherit;font-size:14px;text-align:left;direction:ltr;cursor:pointer}
+.date-picker-display span:first-child{direction:ltr;unicode-bidi:isolate;font-family:Arial,sans-serif;letter-spacing:.3px}
+
 </style>
 
 <meta name="theme-color" content="#137a52">
@@ -921,7 +928,7 @@ input:focus,select:focus{outline:2px solid #9bd8bd!important;border-color:#16845
  <div class="modal-box">
   <div class="modal-title">تسجيل دفعة جديدة</div>
   <div class="form-group" id="paymentAmountGroup"><label>المبلغ المدفوع (ر.ع)</label><input id="paymentAmount" type="number" min="0.001" step="0.001" inputmode="decimal" placeholder="أدخل المبلغ"></div>
-  <div class="form-group"><label>تاريخ الدفع</label><input id="paymentDate" type="date" lang="en-US" dir="ltr"></div>
+  <div class="form-group"><label>تاريخ الدفع</label><div class="date-picker-wrap" dir="ltr"><input id="paymentDate" class="native-date-source" type="date" lang="en-US" onchange="syncDatePickerDisplay('paymentDate')"><button type="button" class="date-picker-display" onclick="openNativeDatePicker('paymentDate')"><span id="paymentDateDisplay">اختر التاريخ</span><span aria-hidden="true">▾</span></button></div></div>
   <div id="paymentHint" style="font-size:12px;color:#64716d;margin:5px 0"></div>
   <button class="primary-btn" onclick="submitPayment()">حفظ الدفعة</button>
   <button class="close-btn" onclick="closeModal('paymentModal')">إلغاء</button>
@@ -955,8 +962,7 @@ input:focus,select:focus{outline:2px solid #9bd8bd!important;border-color:#16845
                 تاريخ الحصة المكتملة
             </label>
 
-            <input id="lessonDate"
-                   type="date" lang="en-US" dir="ltr">
+            <div class="date-picker-wrap" dir="ltr"><input id="lessonDate" class="native-date-source" type="date" lang="en-US" onchange="syncDatePickerDisplay('lessonDate')"><button type="button" class="date-picker-display" onclick="openNativeDatePicker('lessonDate')"><span id="lessonDateDisplay">اختر التاريخ</span><span aria-hidden="true">▾</span></button></div>
 
         </div>
 
@@ -1651,6 +1657,17 @@ function openStudent(id){
 function totalPaid(st){return (st.payments||[]).reduce((a,p)=>a+Number(p.amount||0),0);}
 function monthlyCreditsLeft(st){const credits=(st.payments||[]).reduce((a,p)=>a+Number(p.lessonCredits||4),0);return Math.max(0,credits-(st.completed||[]).length);}
 function unpaidLessons(st){const credits=(st.payments||[]).reduce((a,p)=>a+Number(p.lessonCredits||4),0);return Math.max(0,(st.completed||[]).length-credits);}
+
+function openNativeDatePicker(id){
+ const input=document.getElementById(id);if(!input)return;
+ try{if(typeof input.showPicker==="function")input.showPicker();else input.click();}catch(e){input.click();}
+}
+function syncDatePickerDisplay(id){
+ const input=document.getElementById(id),display=document.getElementById(id+"Display");
+ if(!input||!display)return;
+ display.textContent=input.value||"اختر التاريخ";
+}
+
 function openPaymentModal(id){
  const st=students.find(s=>s.id===id);if(!st)return;
  currentStudentId=id;
@@ -1658,7 +1675,7 @@ function openPaymentModal(id){
  const amountGroup=document.getElementById("paymentAmountGroup");
  amountGroup.style.display=monthly?"none":"";
  document.getElementById("paymentAmount").value=monthly?Number(st.amount||0):"";
- document.getElementById("paymentDate").value=today();
+ document.getElementById("paymentDate").value=today();syncDatePickerDisplay("paymentDate");
  document.getElementById("paymentHint").textContent=monthly
   ? "سيُسجّل مبلغ الاشتراك الشهري المحفوظ تلقائياً، ويكفي اختيار تاريخ الدفع."
   : "أدخل المبلغ المدفوع واختر تاريخ استلامه.";
