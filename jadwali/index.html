@@ -983,6 +983,48 @@ body{margin:0}
  #weeklySchedule .lesson-counter{font-size:6.5px!important}
 }
 
+
+/* Explicit two-line student identity: name first, grade underneath */
+#weeklySchedule .students-list .student-card .student-mainline{
+ display:flex!important;
+ flex-direction:column!important;
+ flex-wrap:nowrap!important;
+ align-items:center!important;
+ justify-content:center!important;
+ width:100%!important;
+ min-width:0!important;
+ gap:2px!important;
+}
+#weeklySchedule .students-list .student-card .student-mainline .student-name{
+ display:block!important;
+ flex:0 0 auto!important;
+ width:100%!important;
+ max-width:100%!important;
+ white-space:normal!important;
+ overflow-wrap:anywhere!important;
+ word-break:normal!important;
+ text-overflow:clip!important;
+ overflow:visible!important;
+ text-align:center!important;
+ line-height:1.25!important;
+ font-size:10px!important;
+}
+#weeklySchedule .students-list .student-card .student-mainline .student-grade{
+ display:block!important;
+ flex:0 0 auto!important;
+ width:100%!important;
+ max-width:100%!important;
+ white-space:normal!important;
+ text-align:center!important;
+ font-size:8px!important;
+ line-height:1.2!important;
+ margin:0!important;
+}
+@media(max-width:390px){
+ #weeklySchedule .students-list .student-card .student-mainline .student-name{font-size:9px!important}
+ #weeklySchedule .students-list .student-card .student-mainline .student-grade{font-size:8px!important}
+}
+
 </style>
 
 <meta name="theme-color" content="#137a52">
@@ -2510,8 +2552,8 @@ function renderWeekly(){
             const cycle=getLessonCycleStatus(st);
             return `<div class="student-card" onclick="openStudent('${st.id}')">
                 <div class="student-mainline">
-                    <span class="student-name">${completed?'<span class="completed-mark">✓</span>':''}${escapeHTML(st.name||"")}</span>
-                    <span class="student-grade">${escapeHTML(st.grade||"-")}</span>
+                    <div class="student-name">${completed?'<span class="completed-mark">✓</span>':''}${escapeHTML(st.name||"")}</div>
+                    <div class="student-grade">${escapeHTML(st.grade||"-")}</div>
                 </div>
                 <div class="student-subline">
                     <span class="student-location">${escapeHTML(st.location||"")}</span>
